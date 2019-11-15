@@ -1,0 +1,19 @@
+#composite with uncertainty
+compositeEnsembles <- function(fTS,binvec,spread = TRUE,stanFun = standardizeMeanIteratively,ageVar = "age",gaussianizeInput = FALSE,binFun = sampleEnsembleThenBinTs,...){
+  binAges <- rowMeans(cbind(binvec[-1],binvec[-length(binvec)]))
+
+  binMatR <- as.matrix(purrr::map_dfc(fTS,binFun,binvec,ageVar = ageVar,spread = spread,gaussianizeInput = gaussianizeInput))
+  binMatR[is.nan(binMatR)] <- NA
+
+  compMat <- stanFun(ages = binAges,pdm = binMatR,...)
+
+  comp <- rowMeans(compMat,na.rm = TRUE)
+  count <- rowSums(!is.na(compMat))
+  return(list(composite = comp, count = count))
+}
+
+
+
+
+
+
