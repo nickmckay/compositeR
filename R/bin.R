@@ -26,6 +26,11 @@ removeConsecutiveDuplicates <- function(spreadValues){
 
 spreadPaleoData <- function(age,value,spreadBy,maxGap,minAge = -69){
 
+  if(length(age)==0){
+    #what's happening
+    return(list(spreadAge = age,spreadVal = value))
+  }
+
   #remove nonfinite ages
   good <- which(is.finite(age))
   if(length(good) < 2){
@@ -113,8 +118,6 @@ spreadPaleoData <- function(age,value,spreadBy,maxGap,minAge = -69){
 }
 
 
-
-
 #' simple binning of a TS object instance
 #'
 #' @param ts a ts object
@@ -126,7 +129,7 @@ spreadPaleoData <- function(age,value,spreadBy,maxGap,minAge = -69){
 #' @importFrom pracma interp1
 #'
 #' @examples
-simpleBinTs <- function(ts,binvec,ageVar = "age",spread = TRUE,spreadBy = abs(mean(diff(binvec)))/10,gaussianizeInput= FALSE){
+simpleBinTs <- function(ts,binvec,ageVar = "age",spread = TRUE,spreadBy = abs(mean(diff(binvec)))/10,gaussianizeInput= FALSE,alignInterpDirection = TRUE){
   if(spread){#estimate for contiguous sampling with a nearest neighbor interpolation
 
   sp <- spreadPaleoData(age = ts[[ageVar]],
@@ -148,19 +151,20 @@ simpleBinTs <- function(ts,binvec,ageVar = "age",spread = TRUE,spreadBy = abs(me
   }
 
 
+  if(alignInterpDirection){
+    #check for direction
+    din <- names(ts)[stringr::str_detect("_interpDirection",string = names(ts))]
+    di <- unlist(magrittr::extract(ts,din))
 
-  #check for direction
-  din <- names(ts)[stringr::str_detect("_interpDirection",string = names(ts))]
-  di <- unlist(magrittr::extract(ts,din))
+    sin <- names(ts)[stringr::str_detect("_scope",string = names(ts))]
+    si <- unlist(magrittr::extract(ts,sin))
 
-  sin <- names(ts)[stringr::str_detect("_scope",string = names(ts))]
-  si <- unlist(magrittr::extract(ts,sin))
+    di <- di[grepl(pattern = "climate",x = si)]
 
-  di <- di[grepl(pattern = "climate",x = si)]
-
-  if(length(di)>0){
-    if(all(grepl(di,pattern = "negative",ignore.case = TRUE))){
-      vals <- sp$spreadVal * -1
+    if(length(di)>0){
+      if(all(grepl(di,pattern = "negative",ignore.case = TRUE))){
+        vals <- sp$spreadVal * -1
+      }
     }
   }
 
