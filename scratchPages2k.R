@@ -2,6 +2,7 @@ library(geoChronR)
 library(lipdR)
 library(purrr)
 library(magrittr)
+library(compositeR)
 #load database
 D <- readLipd("~/Dropbox/LiPD/PAGES2k/Temp_v2_1_0/")
 
@@ -11,78 +12,99 @@ TS <- extractTs(D)
 #filter by compilation
 fTS <- filterTs(TS,"paleoData_useInGlobalTemperatureAnalysis ==  TRUE")
 
-ls <- map_dbl(fTS,function(x) sum(!is.na(x$paleoData_values) & !is.na(x$year)))
-ls2 <- map_dbl(fTS,function(x) length(x$paleoData_values))
-
-fTS <- fTS[which(ls > 10 & ls2 >10)]
-
-
 #bin the TS
 binvec <-  seq(0, to = 2000, by = 1)
 binAges <- rowMeans(cbind(binvec[-1],binvec[-length(binvec)]))
 
+dur <- map_dbl(fTS,function(x){abs(diff(range(x$year)))})
+
+
+#setup latbins
+allLatBins <- vector(mode = "list",length = 4)
+allLatBins[[1]] <- seq(-90,90,by = 30)
+allLatBins[[2]] <- c(-90,-30,0,30,90)
+allLatBins[[3]] <- c(-90,0,90)
+allLatBins[[4]] <- c(-90,90)
+library(foreach)
+library(doParallel)
+registerDoParallel(4)
+for(alb in 1){#:length(allLatBins)){
 
 #composite lat bins
-latbins <- seq(-90,90,by = 30)
+latbins <- allLatBins[[alb]]
 lat <- geoChronR::pullTsVariable(fTS,"geo_latitude")
 
 #load in scaling data
 targets <- list.files("~/Dropbox/Temperature12k/",pattern = "ERA",full.names = TRUE)
+targetsShort <- list.files("~/Dropbox/Temperature12k/",pattern = "ERA",full.names = FALSE)
 targ <- purrr::map(targets,read.csv)
 
+#scaling window
+#sw <- 200
 
-library(foreach)
-library(doParallel)
-registerDoParallel(6)
 #set up ensembles?
-nens <- 50
+nens <- 10
 
 scaled <- comps <- counts <- c()
-foreach(lb = 1:(length(latbins)-1)) %dopar% {
+for(lb in 1:(length(latbins)-1)){
   scaleEns <- c()
   fi <- which(lat > latbins[lb] & lat <= latbins[lb+1])
-  for(n in 1:nens){
-  tc <- compositeEnsembles(fTS[fi],binvec,ageVar = "year",spread = TRUE,duration = 100, searchRange = c(0,2000),binFun = simpleBinTs)
+
+  dur <- map_dbl(fTS[fi],function(x){abs(diff(range(x$year)))})
+sw <- floor(min(dur))
+
+scaledList <- foreach(n = 1:nens) %dopar% {
+  tc <- compositeEnsembles(fTS[fi],binvec,ageVar = "year",spread = TRUE,duration = sw, searchRange = c(0,2000),binFun = simpleBinTs)
   comps <- cbind(comps,tc$composite)
   counts <- cbind(counts,tc$count)
 
-  thisTarget <- which(grepl(targets,pattern = paste0(latbins[lb],"to",latbins[lb+1])))
+  thisTarget <- which(stringr::str_starts(string = targetsShort, paste0(latbins[lb],"to",latbins[lb+1])))
   if(length(thisTarget) != 1){
     stop("target matching problem")
   }
 
+
+
   thisScaled <- scaleComposite(composite = tc$composite,binvec = binvec,scaleYears = targ[[thisTarget]][,1],scaleData = targ[[thisTarget]][,-1])
 
+  return(thisScaled)
+#   scaled <- cbind(scaled,thisScaled)
+#   scaleEns <- cbind(scaleEns,thisScaled)
+}
 
-  scaled <- cbind(scaled,thisScaled)
-  scaleEns <- cbind(scaleEns,thisScaled)
-  }
+  scaleEns <-  as.matrix(purrr::map_dfc(scaledList,extract))
+
   out <- cbind(binAges,scaleEns)
-  write.csv(x = out,file = paste0("~/Dropbox/Temperature12k/",paste0(latbins[lb] ,"to", latbins[lb+1],"PAGES2k.csv")), row.names = FALSE,col.names = FALSE)
+  write.csv(x = out,file = paste0("~/Dropbox/Temperature12k/",paste0(latbins[lb] ,"to", latbins[lb+1],"-scaleWindow",sw,"-PAGES2k.csv")), row.names = FALSE,col.names = FALSE)
 }
 
 
 
 #plot 2k reconstructions
+sw <- 200
 targets <- list.files("~/Dropbox/Temperature12k/",pattern = "PAGES",full.names = TRUE)
 targ <- purrr::map(targets,read.csv)
 
 colorsHi <- RColorBrewer::brewer.pal(6,"Set3")
 #colorsHi <- c("blue3", "darkgreen","chocolate4","darkred","darkorchid4","aquamarine4")
 #colorsLo <- c("darkslategray1", "darkolivegreen2","chocolate1","coral","darkorchid1","aquamarine")
-
+library(ggplot2)
 plot2k <- ggplot()
 
 for(lb in 1:(length(latbins)-1)){
-
-  thisTarget <- which(grepl(targets,pattern = paste0(latbins[lb],"to",latbins[lb+1])))
+  fi <- which(lat > latbins[lb] & lat <= latbins[lb+1])
+  dur <- map_dbl(fTS[fi],function(x){abs(diff(range(x$year)))})
+  print(floor(min(dur)))
+  thisTarget <- which(grepl(targets,pattern = paste0(latbins[lb] ,"to", latbins[lb+1],"-scaleWindow",sw,"-PAGES2k.csv")))
   if(length(thisTarget) != 1){
     stop("target matching problem")
   }
 
   out <- as.matrix(targ[[thisTarget]])
 
-  plot2k <- plotTimeseriesEnsRibbons(plot2k,X = out[,1], Y = out[,-1],alp = .5,colorHigh = colorsHi[lb],lineColor = colorsHi[lb],lineWidth = 1)
+  plot2k <- plotTimeseriesEnsRibbons(plot2k,X = out[,1], Y = out[,-1],alp = .5,colorHigh = colorsHi[lb],lineColor = colorsHi[lb],lineWidth = 1)+
+    geom_text(aes(x = 1500), y = (lb * .5) - 0 ,label = paste(latbins[lb],"to",latbins[lb+1]),color = colorsHi[lb])
+
 }
 plot2k
 
@@ -118,6 +140,8 @@ ggplot()+geom_line(data = tidyScale,aes(x = year, y = value, colour = `Latitude 
   scale_y_continuous(name = "Temperature (wrt 1850-2000) (deg C)")+
   theme_bw()
 
+
+}
 
 
 
