@@ -3,7 +3,8 @@ library(lipdR)
 library(purrr)
 library(magrittr)
 #load database
-load("~/GitHub/lipdverse/html/iso2k/current_version/iso2k0_12_0.RData")
+#load("~/GitHub/lipdverse/html/iso2k/current_version/iso2k0_14")
+
 # D <- readLipd("~/GitHub/lipdverse/html/iso2k/current_version/")
 #
 # #extract timeseries

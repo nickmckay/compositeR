@@ -7,9 +7,12 @@ compositeEnsembles <- function(fTS,binvec,spread = TRUE,stanFun = standardizeMea
 
   compMat <- stanFun(ages = binAges,pdm = binMatR,...)
 
+  #which records contributed?
+  gm <- is.finite(compMat)
   comp <- rowMeans(compMat,na.rm = TRUE)
-  count <- rowSums(!is.na(compMat))
-  return(list(composite = comp, count = count))
+  count <- rowSums(gm)
+  contributed <- which(count > 0)
+  return(list(composite = comp, count = count, contributed = contributed))
 }
 
 
