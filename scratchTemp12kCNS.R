@@ -1,12 +1,11 @@
-
-library(geoChronR) #devtools::install_github("nickmckay/geoChronR")
+library(geoChronR)
 library(lipdR)
 library(purrr)
 library(magrittr)
 library(ggplot2)
-library(compositeR)#devtools::install_github("nickmckay/compositeR")
+library(compositeR)
 #load database
-D <- readLipd("../lipdFilesWithEnsembles/")
+D <- readLipd("~/Dropbox/HoloceneLiPDLibrary/createdEnsembles/")
 
 #remove bad values
 D$MD97_2151.Assemblage <- NULL
@@ -19,9 +18,12 @@ TS <- extractTs(D)
 
 sg <- pullTsVariable(TS,variable = "interpretation1_seasonalityGeneral")
 ic <- pullTsVariable(TS,"paleoData_inCompilation")
+u <- pullTsVariable(TS,"paleoData_units")
+
 
 #filter by compilation and seasonality
-tu <- which(tolower(ic) == "temp12kensemble" & (tolower(sg) == "annual" | tolower(sg) == "summeronly" | tolower(sg) == "winteronly"))
+tu <- which(tolower(ic) == "temp12kensemble" & (tolower(sg) == "annual" | tolower(sg) == "summeronly" | tolower(sg) == "winteronly") & tolower(u) == "degc")
+
 fTS <- TS[tu]
 
 ls <- map_dbl(fTS,function(x) sum(!is.na(x$paleoData_values) & !is.na(x$age)))
@@ -86,18 +88,12 @@ binAges <- rowMeans(cbind(binvec[-1],binvec[-length(binvec)]))
 #
 
 #setup ensemble
-nens <- 10
+nens <- 500
 
 
 #composite lat bins
 latbins <- seq(-90,90,by = 30)
 lat <- geoChronR::pullTsVariable(fTS,"geo_latitude")
-
-#load in scaling data
-targets <- list.files("~/Dropbox/Temperature12k/",pattern = "PAGES2k",full.names = TRUE)
-targetsShort <- list.files("~/Dropbox/Temperature12k/",pattern = "PAGES2k",full.names = FALSE)
-sw <- 100 #pages 2k scaling window
-targ <- purrr::map(targets,read.csv)
 
 scaled <- comps <- counts <- c()
 ensOut <- vector(mode = "list",length = nens)
@@ -111,14 +107,31 @@ allLatBins[[2]] <- c(-90,-30,0,30,90)
 allLatBins[[3]] <- c(-90,0,90)
 allLatBins[[4]] <- c(-90,90)
 
+#load in scaling data
+targets <- list.files("~/Dropbox/Temperature12k/",pattern = "PAGES2k",full.names = TRUE)
+targetsShort <- list.files("~/Dropbox/Temperature12k/",pattern = "PAGES2k",full.names = FALSE)
+sw <- 100 #pages 2k scaling window
+targ <- purrr::map(targets,read.csv)
+
+#for(alb in 1){
+alb <- 1
+sw <- 100
+latbins <- allLatBins[[alb]]
+
+
 #for(alb in 1){
 alb <- 1
 latbins <- allLatBins[[alb]]
+
 ensOut[[alb]] <- foreach(i = 1:nens) %dopar% {
+  if(i%%10 == 0){
+    write.csv(i,file = "~/Desktop/nscprog.csv")
+  }
+
   scaled <- c()
   for(lb in 1:(length(latbins)-1)){
     fi <- which(lat > latbins[lb] & lat <= latbins[lb+1])
-    tc <- compositeEnsembles(fTS[fi],binvec,spread = TRUE,duration = 3000, searchRange = c(0,7000),gaussianizeInput = FALSE)
+    tc <- compositeEnsembles(fTS[fi],binvec,spread = TRUE,duration = 3000, searchRange = c(0,7000),gaussianizeInput = FALSE,normalizeVariance = FALSE)
     #tc <- compositeEnsembles(fTS[fi],binvec,spread = spread,...)
     comps <- cbind(comps,tc$composite)
     counts <- cbind(counts,tc$count)
@@ -130,7 +143,7 @@ ensOut[[alb]] <- foreach(i = 1:nens) %dopar% {
       stop("target matching problem")
     }
 
-    thisScaled <- scaleComposite(composite = tc$composite,binvec = binvec,scaleYears = 1950-targ[[thisTarget]][,1],scaleData = targ[[thisTarget]][,-1],scaleWindow = 1950-c(0,2000))
+    thisScaled <- scaleComposite(composite = tc$composite,binvec = binvec,scaleYears = 1950-targ[[thisTarget]][,1],scaleData = targ[[thisTarget]][,-1],scaleWindow = 1950-c(0,2000),scaleVariance =FALSE)
 
 
     scaled <- cbind(scaled,thisScaled)
@@ -142,7 +155,7 @@ ensOut[[alb]] <- foreach(i = 1:nens) %dopar% {
 
 
   zonalNames <- stringr::str_c(latbins[-1]," to ",latbins[-length(latbins)])
-  scaledDf <- as.data.frame(scaled[,-ncol(scaled)])
+  scaledDf <- as.data.frame(scaled)
   names(scaledDf) <- zonalNames
   scaledDf$year <- binAges
   scaledDf$GlobalMean <- rowSums(t(t(scaled)*zonalWeights))
@@ -155,47 +168,38 @@ ensOut[[alb]] <- foreach(i = 1:nens) %dopar% {
   # print(i)
 }
 
-save(list = c("ensOut"),file = "~/Dropbox/Temperature12k/12kensOut10.RData")
+save(list = c("ensOut"),file = "~/Dropbox/Temperature12k/12kensOutCNS500.RData")
 
-
-test <- ensOut[[1]][[1]]
-for(i in 2:nens){
-  test <- test + ensOut[[1]][[i]]
-}
-test <- test/nens
-test <- test[,c(12,2,4,6,8,10,14)]
-names(test) <- c("year",zonalNames)
-
-write_csv(test,"~/Dropbox/Holocene GMST/CPS12k/meanSampleDepth.csv")
 
 #plotting!
 library(magrittr)
 library(purrr)
-allLatMeans <- map_dfc(ensOut[[alb]],extract2,"GlobalMean")
+library(tidyverse)
+allLatMeans <- cbind(binAges, map_dfc(ensOut[[alb]],extract2,"GlobalMean"))
 #allCounts <- map_dfc(ensOut[[alb]],extract2,"counts")
 
 #write out data
 settings <- paste0(nens,"-",length(latbins)-1,"bands-",sw,"yr2kwindow")
-write_csv(path = paste0("~/Dropbox/Holocene GMST/CPS12k/globalMean",settings,".csv"),x = allLatMeans)
+write_csv(path = paste0("~/Dropbox/Holocene GMST/DCC/globalMean",settings,".csv"),x = allLatMeans,col_names = FALSE)
 
 
 
-for(lb in 1:(length(latbins)-1)){
-lbn <- paste0(latbins[lb],"to",latbins[lb+1])
-out <- cbind(binAges,as.matrix(map_dfc(ensOut[[alb]],extract2,lb)))
-write.csv(file = paste0("~/Dropbox/Holocene GMST/CPS12k/",lbn,settings,".csv"),x = out)
-
-}
+# for(lb in 1:(length(latbins)-1)){
+# lbn <- paste0(latbins[lb],"to",latbins[lb+1])
+# out <- cbind(binAges,as.matrix(map_dfc(ensOut[[alb]],extract2,lb)))
+# write.csv(file = paste0("~/Dropbox/Holocene GMST/CPS12k/",lbn,settings,".csv"),x = out)
+#
+# }
 
 library(ggplot2)
 globMean <- plotTimeseriesEnsRibbons(X = binAges,Y = as.matrix(allLatMeans),x.bin = seq(-1,12000,by = 10))+
   scale_x_reverse(name = "Year (BP)",breaks = seq(0,12000,2000),oob = scales::squish)+
-  scale_y_continuous(name = "Temperature (deg C) (wrt 1000-2000 AD)",limits = c(-10,5),oob = scales::squish)+
+  scale_y_continuous(name = "Temperature (deg C) (wrt 1000-2000 AD)",oob = scales::squish)+
   theme_bw()+
   ggtitle("Global Mean Temperature (Composite Plus Scale)")
 globMean
 
-ggsave(filename = paste0("~/Dropbox/Temperature12k/GlobalMean12k-2k-",alb,".pdf"),globMean )
+ggsave(filename = paste0("~/Dropbox/Temperature12k/DCC-GlobalMean12k-2k-",alb,".pdf"),globMean )
 
 #plot bands:
 
@@ -209,19 +213,19 @@ plot12k <- ggplot()
 for(lb in 1:(length(latbins)-1)){
 
   out <- as.matrix(map_dfc(ensOut[[alb]],extract2,lb))
+  write_csv(path = paste0("~/Dropbox/Holocene GMST/DCC/latBand",latbins[lb],"to",latbins[lb+1],".csv"),x = as.data.frame(cbind(binAges,out)),col_names = FALSE)
 
   plot12k <- plotTimeseriesEnsRibbons(plot12k,X = binAges, Y = out,alp = .5,colorHigh = colorsHi[lb],lineColor = colorsHi[lb],lineWidth = 1,x.bin = seq(-1,12000,by = 10))+
-    geom_text(aes(x = 6000), y = (lb * 1.5) - 11 ,label = paste(latbins[lb],"to",latbins[lb+1]),color = colorsHi[lb])
+    geom_text(aes(x = 6000), y = (lb * .25) - 3 ,label = paste(latbins[lb],"to",latbins[lb+1]),color = colorsHi[lb])
 
 }
 plot12k <- plot12k +
   scale_x_reverse(name = "Year (BP)",breaks = seq(0,12000,2000))+
   scale_y_continuous(name = "Temperature (deg C) (wrt 1000-2000 AD)",oob = scales::squish)+
-  ggtitle("Zonal Mean Temperature (Composite Plus Scale)")
-
+  ggtitle("Zonal Mean Temperature (Composite Plus Scale)")+
   theme_bw()
 
-ggsave(filename = paste0("~/Dropbox/Temperature12k/LatBands12k-2k-",alb,".pdf"),plot12k )
+ggsave(filename = paste0("~/Dropbox/Temperature12k/DCC-LatBands12k-2k-",alb,".pdf"),plot12k )
 plot12k
 
 

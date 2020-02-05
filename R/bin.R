@@ -174,7 +174,7 @@ simpleBinTs <- function(ts,binvec,ageVar = "age",spread = TRUE,spreadBy = abs(me
 
 
 
-sampleEnsembleThenBinTs <- function(ts,binvec,ageVar = "age",uncVar = "paleoData_uncertainty1sd",defaultUnc = 1.5,ar = sqrt(0.5),bamModel = list(ns = 1, name = "bernoulli", param = 0.05),spread = TRUE,spreadBy = abs(mean(diff(binvec)))/10,gaussianizeInput = FALSE){
+sampleEnsembleThenBinTs <- function(ts,binvec,ageVar = "age",uncVar = "paleoData_uncertainty1sd",defaultUnc = 1.5,ar = sqrt(0.5),bamModel = list(ns = 1, name = "bernoulli", param = 0.05),spread = TRUE,spreadBy = abs(mean(diff(binvec)))/10,gaussianizeInput = FALSE,alignInterpDirection = TRUE){
   #sample from ageEnsemble
   if(is.null(ts[[ageVar]])){
     stop(print(paste0(ts$dataSetName,": has a null for its age variable")))
@@ -222,18 +222,21 @@ sampleEnsembleThenBinTs <- function(ts,binvec,ageVar = "age",uncVar = "paleoData
     vals <-thisPdv
   }
 
-  #check for direction
-  din <- names(ts)[stringr::str_detect("_interpDirection",string = names(ts))]
-  di <- unlist(magrittr::extract(ts,din))
 
-  sin <- names(ts)[stringr::str_detect("_scope",string = names(ts))]
-  si <- unlist(magrittr::extract(ts,sin))
+  if(alignInterpDirection){
+    #check for direction
+    din <- names(ts)[stringr::str_detect("_interpDirection",string = names(ts))]
+    di <- unlist(magrittr::extract(ts,din))
 
-  di <- di[grepl(pattern = "climate",x = si)]
+    sin <- names(ts)[stringr::str_detect("_scope",string = names(ts))]
+    si <- unlist(magrittr::extract(ts,sin))
 
-  if(length(di)>0){
-    if(all(grepl(di,pattern = "negative",ignore.case = TRUE))){
-      vals <- sp$spreadVal * -1
+    di <- di[grepl(pattern = "climate",x = si)]
+
+    if(length(di)>0){
+      if(all(grepl(di,pattern = "negative",ignore.case = TRUE))){
+        vals <- sp$spreadVal * -1
+      }
     }
   }
 

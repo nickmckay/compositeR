@@ -95,6 +95,12 @@ library(RColorBrewer)
 library(scales)
 library(parallel)
 
+#lat bins
+#latbins <- seq(-90,90,by = 30)
+#latbins <- c(-90,-30,0,30,90)
+#latbins <- c(-90,0,90)
+latbins <- c(-90,90)
+
 
 
 #reference period
@@ -131,7 +137,7 @@ instr<-aperm(apply(instr,c(1,2),function(x) x-mean(x[(ref.start-instr.start+1):(
 
 
 
-latbins <- seq(-90,90,by = 30)
+
 
 for(lb in 1:(length(latbins)-1)){
   fi <- which(lats > latbins[lb] & lats <= latbins[lb+1])
