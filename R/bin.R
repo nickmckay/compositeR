@@ -168,7 +168,7 @@ simpleBinTs <- function(ts,binvec,ageVar = "age",spread = TRUE,spreadBy = abs(me
     }
   }
 
-  bd <- geoChronR::bin(age,vals,binvec = binvec)[,2]
+  bd <- geoChronR::bin(age,vals,bin.vec = binvec)[,2]
   return(bd)
 }
 
@@ -240,7 +240,7 @@ sampleEnsembleThenBinTs <- function(ts,binvec,ageVar = "age",uncVar = "paleoData
     }
   }
 
-  bd <- geoChronR::bin(time = age,values = vals,binvec = binvec)[,2]
+  bd <- geoChronR::bin(time = age,values = vals,bin.vec = binvec)[,2]
   return(bd)
 
 }
