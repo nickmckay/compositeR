@@ -159,12 +159,37 @@ optimizeMean <- function(m,td,palMat){
   return(recordRMSE(ntd,palMat)$totalRMSE)
 }
 
-standardizeMeanIteratively <- function(ages,pdm,duration,searchRange,normalizeVariance = TRUE,thresh = 0.01,minN = 8){
+#' Title
+#'
+#' @param ages vector of ages
+#' @param pdm matrix of binned paleodata
+#' @param duration length of interval over which to standardize
+#' @param searchRange
+#' @param normalizeVariance
+#' @param thresh
+#' @param minN
+#'
+#' @return
+#' @export
+#'
+#' @examples
+standardizeMeanIteratively <- function(ages,
+                                       pdm,
+                                       duration,
+                                       searchRange,
+                                       normalizeVariance = TRUE,
+                                       thresh = 0.01,
+                                       minN = 8){
   #nicks crackpot idea
 
   #start by scaling everything
 
-  start <- standardizeOverRandomInterval(ages = ages,pdm = pdm,duration = duration,searchRange = searchRange,normalizeVariance = normalizeVariance,minN = minN)
+  start <- standardizeOverRandomInterval(ages = ages,
+                                         pdm = pdm,
+                                         duration = duration,
+                                         searchRange = searchRange,
+                                         normalizeVariance = normalizeVariance,
+                                         minN = minN)
 
   #remove records that failed (this should potentially cause an error in the future)
   start[!is.finite(start)] <- NA

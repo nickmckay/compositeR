@@ -5,19 +5,21 @@ library(magrittr)
 #load database
 #load("~/GitHub/lipdverse/html/iso2k/current_version/iso2k0_14")
 
-# D <- readLipd("~/GitHub/lipdverse/html/iso2k/current_version/")
-#
+ D <- readLipd("https://lipdverse.org/iso2k/current_version/iso2k1_0_0.zip")
+
 # #extract timeseries
-# TS <- extractTs(D)
-# sTS <- splitInterpretationByScope(TS)
+TS <- extractTs(D)
+sTS <- splitInterpretationByScope(TS)
 
-
+tibTS <- ts2tibble(TS)
 
 #get all the names in the TS
 allnames <- sapply(sTS,names) %>%
   unlist() %>%
   unique() %>%
   sort()
+
+names(tibTS) %>% sort()
 
 
 #pull variables needed for filtering
@@ -49,11 +51,12 @@ nens <- 20
 
 library(foreach)
 library(doParallel)
-registerDoParallel(6)
+registerDoParallel(2)
 
 ensOut <- foreach(i = 1:nens) %dopar% {
     tc <- compositeEnsembles(fTS,
                              binvec,
+                             stanFun = standardizeMeanIteratively,
                              binFun = simpleBinTs,
                              ageVar = "year",
                              alignInterpDirection = FALSE,

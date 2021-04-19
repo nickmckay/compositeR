@@ -129,7 +129,13 @@ spreadPaleoData <- function(age,value,spreadBy,maxGap,minAge = -69){
 #' @importFrom pracma interp1
 #'
 #' @examples
-simpleBinTs <- function(ts,binvec,ageVar = "age",spread = TRUE,spreadBy = abs(mean(diff(binvec)))/10,gaussianizeInput= FALSE,alignInterpDirection = TRUE){
+simpleBinTs <- function(ts,
+                        binvec,
+                        ageVar = "age",
+                        spread = TRUE,
+                        spreadBy = abs(mean(diff(binvec)))/10,
+                        gaussianizeInput= FALSE,
+                        alignInterpDirection = TRUE){
   if(spread){#estimate for contiguous sampling with a nearest neighbor interpolation
 
   sp <- spreadPaleoData(age = ts[[ageVar]],
@@ -174,7 +180,17 @@ simpleBinTs <- function(ts,binvec,ageVar = "age",spread = TRUE,spreadBy = abs(me
 
 
 
-sampleEnsembleThenBinTs <- function(ts,binvec,ageVar = "age",uncVar = "paleoData_uncertainty1sd",defaultUnc = 1.5,ar = sqrt(0.5),bamModel = list(ns = 1, name = "bernoulli", param = 0.05),spread = TRUE,spreadBy = abs(mean(diff(binvec)))/10,gaussianizeInput = FALSE,alignInterpDirection = TRUE){
+sampleEnsembleThenBinTs <- function(ts,
+                                    binvec,
+                                    ageVar = "age",
+                                    uncVar = "paleoData_uncertainty1sd",
+                                    defaultUnc = 1.5,
+                                    ar = sqrt(0.5),
+                                    bamModel = list(ns = 1, name = "bernoulli", param = 0.05),
+                                    spread = TRUE,
+                                    spreadBy = abs(mean(diff(binvec)))/10,
+                                    gaussianizeInput = FALSE,
+                                    alignInterpDirection = TRUE){
   #sample from ageEnsemble
   if(is.null(ts[[ageVar]])){
     stop(print(paste0(ts$dataSetName,": has a null for its age variable")))
@@ -187,9 +203,6 @@ sampleEnsembleThenBinTs <- function(ts,binvec,ageVar = "age",uncVar = "paleoData
 
 
   #Now sample from paleoData
-
-
-
   if(NCOL(ts$paleoData_values) > 1){#draw from ensemble
     thisPdv <- ts$paleoData_values[ , sample.int(NCOL(ts$paleoData_values),size = 1)]
   }else{ #simulate uncertainty from number
