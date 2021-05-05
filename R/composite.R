@@ -21,11 +21,12 @@ compositeEnsembles <- function(fTS,
                                ageVar = "age",
                                gaussianizeInput = FALSE,
                                alignInterpDirection = TRUE,
+                               scope = "climate",
                                binFun = sampleEnsembleThenBinTs,
                                ...){
   binAges <- rowMeans(cbind(binvec[-1],binvec[-length(binvec)]))
 
-  binMatR <- as.matrix(purrr::map_dfc(fTS,binFun,binvec,ageVar = ageVar,spread = spread,gaussianizeInput = gaussianizeInput,alignInterpDirection = alignInterpDirection))
+  binMatR <- as.matrix(purrr::map_dfc(fTS,binFun,binvec,ageVar = ageVar,spread = spread,gaussianizeInput = gaussianizeInput,alignInterpDirection = alignInterpDirection, scope = scope))
   binMatR[is.nan(binMatR)] <- NA
 
   compMat <- stanFun(ages = binAges,pdm = binMatR,...)

@@ -135,7 +135,8 @@ simpleBinTs <- function(ts,
                         spread = TRUE,
                         spreadBy = abs(mean(diff(binvec)))/10,
                         gaussianizeInput= FALSE,
-                        alignInterpDirection = TRUE){
+                        alignInterpDirection = TRUE,
+                        scope = "climate"){
   if(spread){#estimate for contiguous sampling with a nearest neighbor interpolation
 
   sp <- spreadPaleoData(age = ts[[ageVar]],
@@ -165,11 +166,13 @@ simpleBinTs <- function(ts,
     sin <- names(ts)[stringr::str_detect("_scope",string = names(ts))]
     si <- unlist(magrittr::extract(ts,sin))
 
-    di <- di[grepl(pattern = "climate",x = si)]
+    if(!is.na(scope)){
+      di <- di[grepl(pattern = scope,x = si)]
+    }
 
     if(length(di)>0){
       if(all(grepl(di,pattern = "negative",ignore.case = TRUE))){
-        vals <- sp$spreadVal * -1
+        vals <- vals * -1
       }
     }
   }
@@ -190,7 +193,8 @@ sampleEnsembleThenBinTs <- function(ts,
                                     spread = TRUE,
                                     spreadBy = abs(mean(diff(binvec)))/10,
                                     gaussianizeInput = FALSE,
-                                    alignInterpDirection = TRUE){
+                                    alignInterpDirection = TRUE,
+                                    scope = "climate"){
   #sample from ageEnsemble
   if(is.null(ts[[ageVar]])){
     stop(print(paste0(ts$dataSetName,": has a null for its age variable")))
@@ -244,11 +248,13 @@ sampleEnsembleThenBinTs <- function(ts,
     sin <- names(ts)[stringr::str_detect("_scope",string = names(ts))]
     si <- unlist(magrittr::extract(ts,sin))
 
-    di <- di[grepl(pattern = "climate",x = si)]
+    if(!is.na(scope)){
+    di <- di[grepl(pattern = scope,x = si)]
+    }
 
     if(length(di)>0){
       if(all(grepl(di,pattern = "negative",ignore.case = TRUE))){
-        vals <- sp$spreadVal * -1
+        vals <- vals * -1
       }
     }
   }
