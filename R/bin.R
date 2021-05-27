@@ -1,3 +1,9 @@
+#' remove consecutive duplicates
+#'
+#' @param spreadValues
+#'
+#' @return
+#' @export
 removeConsecutiveDuplicates <- function(spreadValues){
   spreadValues <- as.matrix(spreadValues)
   uv <- unique(spreadValues)
@@ -24,6 +30,16 @@ removeConsecutiveDuplicates <- function(spreadValues){
 
 
 
+#' spreadPaleoData
+#'
+#' @param age
+#' @param value
+#' @param spreadBy
+#' @param maxGap
+#' @param minAge
+#'
+#' @return
+#' @export
 spreadPaleoData <- function(age,value,spreadBy,maxGap,minAge = -69){
 
   if(length(age)==0){
@@ -183,6 +199,23 @@ simpleBinTs <- function(ts,
 
 
 
+#' sampleEnsembleThenBinTs
+#'
+#' @param ts
+#' @param binvec
+#' @param ageVar
+#' @param uncVar
+#' @param defaultUnc
+#' @param ar
+#' @param bamModel
+#' @param spread
+#' @param spreadBy
+#' @param gaussianizeInput
+#' @param alignInterpDirection
+#' @param scope
+#'
+#' @return
+#' @export
 sampleEnsembleThenBinTs <- function(ts,
                                     binvec,
                                     ageVar = "age",

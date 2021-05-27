@@ -2,7 +2,7 @@
 % Please edit documentation in R/standardize.R
 \name{standardizeMeanIteratively}
 \alias{standardizeMeanIteratively}
-\title{Title}
+\title{standardizeMeanIteratively}
 \usage{
 standardizeMeanIteratively(
   ages,
@@ -27,5 +27,5 @@ standardizeMeanIteratively(
 
 }
 \description{
-Title
+standardizeMeanIteratively
 }

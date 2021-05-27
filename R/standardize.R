@@ -1,3 +1,13 @@
+#' standardizeOverInterval
+#'
+#' @param ages
+#' @param pdm
+#' @param interval
+#' @param minN
+#' @param normalizeVariance
+#'
+#' @return
+#' @export
 standardizeOverInterval <- function(ages,pdm,interval,minN = 8,normalizeVariance = TRUE){
 
   #check the data
@@ -42,6 +52,17 @@ standardizeOverInterval <- function(ages,pdm,interval,minN = 8,normalizeVariance
   return(scaledPdm)
 }
 
+#' standardizeOverRandomInterval
+#'
+#' @param ages
+#' @param pdm
+#' @param duration
+#' @param searchRange
+#' @param normalizeVariance
+#' @param minN
+#'
+#' @return
+#' @export
 standardizeOverRandomInterval <- function(ages,pdm,duration,searchRange,normalizeVariance = TRUE,minN = 8){
 
   #check the data
@@ -119,6 +140,13 @@ standardizeOverRandomInterval <- function(ages,pdm,duration,searchRange,normaliz
 
 
 
+#' recordRMSE
+#'
+#' @param td
+#' @param palMat
+#'
+#' @return
+#' @export
 recordRMSE <- function(td,palMat){
   #difference matrix
   tdm <- matrix(td,nrow = nrow(palMat),ncol = ncol(palMat),byrow = FALSE)
@@ -159,7 +187,7 @@ optimizeMean <- function(m,td,palMat){
   return(recordRMSE(ntd,palMat)$totalRMSE)
 }
 
-#' Title
+#' standardizeMeanIteratively
 #'
 #' @param ages vector of ages
 #' @param pdm matrix of binned paleodata

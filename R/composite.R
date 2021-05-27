@@ -12,8 +12,6 @@
 #'
 #' @return
 #' @export
-#'
-#' @examples
 compositeEnsembles <- function(fTS,
                                binvec,
                                spread = TRUE,

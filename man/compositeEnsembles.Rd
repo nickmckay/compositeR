@@ -12,6 +12,7 @@ compositeEnsembles(
   ageVar = "age",
   gaussianizeInput = FALSE,
   alignInterpDirection = TRUE,
+  scope = "climate",
   binFun = sampleEnsembleThenBinTs,
   ...
 )
