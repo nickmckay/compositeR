@@ -34,7 +34,8 @@ compositeEnsembles <- function(fTS,
   comp <- rowMeans(compMat,na.rm = TRUE)
   count <- colSums(gm)
   contributed <- which(count > 0)
-  return(list(composite = comp, count = count, contributed = contributed))
+  timeCount <- rowSums(gm)
+  return(list(composite = comp, count = count, contributed = contributed,timeCount = timeCount))
 }
 
 
