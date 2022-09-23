@@ -34,13 +34,21 @@ removeConsecutiveDuplicates <- function(spreadValues){
 #'
 #' @param age
 #' @param value
-#' @param spreadBy
+#' @param newAge new age vector to spread over
+#' @param spreadBy if newAge is not supplied, what is the desired resolution of spread data.
 #' @param maxGap
+#' @param maxPct
 #' @param minAge
 #'
 #' @return
 #' @export
-spreadPaleoData <- function(age,value,spreadBy,maxGap,minAge = -69){
+spreadPaleoData <- function(age,
+                            value,
+                            newAge = NA,
+                            spreadBy,
+                            maxGap = NA,
+                            maxPct = 0.75,
+                            minAge = -69){
 
   if(length(age)==0){
     #what's happening
@@ -64,7 +72,11 @@ spreadPaleoData <- function(age,value,spreadBy,maxGap,minAge = -69){
   # }
 
   #spread and interpolate
-  newAge <- seq(ceiling(min(age)),floor(max(age)),by = spreadBy)
+  if(all(is.na(newAge))){
+    newAge <- seq(ceiling(min(age)),floor(max(age)),by = spreadBy)
+  }else{
+    spreadBy <- median(newAge,na.rm = TRUE)
+  }
   newVals <- pracma::interp1(as.vector(age),as.vector(value),xi = newAge,method = "nearest")
 
   # if(hasNas){
@@ -118,8 +130,23 @@ spreadPaleoData <- function(age,value,spreadBy,maxGap,minAge = -69){
   #distance to nearest
   d2n <- map_dbl(newAgeOut,function(x) min(abs(x-age)))
 
+  #get local d2n maxima
+  locmaxi <- which(diff(sign(diff(d2n)))==-2)+1
+  locmax <- pracma::interp1(x = as.vector(c(newAgeOut[1],newAgeOut[locmaxi],newAgeOut[length(newAgeOut)])),
+                            as.vector(c(d2n[locmaxi[1]],d2n[locmaxi],d2n[locmaxi[length(locmaxi)]]))
+                            ,xi = newAgeOut,
+                            method = "nearest")
+  lmpct <- d2n/locmax
+
+
   #remove values that exceed maxGap
-  newValsOut[d2n > maxGap] <- NA
+  if(!is.na(maxGap)){
+    newValsOut[d2n > maxGap] <- NA
+  }
+
+  if(!is.na(maxPct)){
+    newValsOut[lmpct > maxPct] <- NA
+  }
 
   #remove values that are too young
   ty <- which(newAgeOut < minAge)
@@ -249,6 +276,11 @@ sampleEnsembleThenBinTs <- function(ts,
       tu <- defaultUnc
     }
     thisPdv <- ts$paleoData_values+simulateAutoCorrelatedUncertainty(sd = tu,n = length(ts$paleoData_values),ar = ar)
+  }
+
+  #check
+  if(length(thisPdv) != length(thisAge)){
+    stop("Paleodata and ages must have the same number of observations.")
   }
 
   #gaussianize?
