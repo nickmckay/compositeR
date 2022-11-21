@@ -77,6 +77,23 @@ spreadPaleoData <- function(age,
   }else{
     spreadBy <- median(newAge,na.rm = TRUE)
   }
+
+
+  age <- as.vector(age)
+  as <- sort(age,index.return = TRUE)
+  age <- age[as$ix]
+  value <- as.vector(value)
+    value <- value[as$ix]
+  if(min(age) > min(newAge)){# we need to extend age
+    age <- c(min(newAge),age)
+    value <- c(value[1],value)
+  }
+
+    if(max(age) < max(newAge)){# we need to extend age
+      age <- c(age,max(newAge))
+      value <- c(value,value[length(value)])
+    }
+
   newVals <- pracma::interp1(as.vector(age),as.vector(value),xi = newAge,method = "nearest")
 
   # if(hasNas){
