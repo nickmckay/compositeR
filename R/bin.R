@@ -83,16 +83,16 @@ spreadPaleoData <- function(age,
   as <- sort(age,index.return = TRUE)
   age <- age[as$ix]
   value <- as.vector(value)
-    value <- value[as$ix]
+  value <- value[as$ix]
   if(min(age) > min(newAge)){# we need to extend age
     age <- c(min(newAge),age)
     value <- c(value[1],value)
   }
 
-    if(max(age) < max(newAge)){# we need to extend age
-      age <- c(age,max(newAge))
-      value <- c(value,value[length(value)])
-    }
+  if(max(age) < max(newAge)){# we need to extend age
+    age <- c(age,max(newAge))
+    value <- c(value,value[length(value)])
+  }
 
   newVals <- pracma::interp1(as.vector(age),as.vector(value),xi = newAge,method = "nearest")
 
@@ -149,11 +149,15 @@ spreadPaleoData <- function(age,
 
   #get local d2n maxima
   locmaxi <- which(diff(sign(diff(d2n)))==-2)+1
-  locmax <- pracma::interp1(x = as.vector(c(newAgeOut[1],newAgeOut[locmaxi],newAgeOut[length(newAgeOut)])),
-                            as.vector(c(d2n[locmaxi[1]],d2n[locmaxi],d2n[locmaxi[length(locmaxi)]]))
-                            ,xi = newAgeOut,
-                            method = "nearest")
-  lmpct <- d2n/locmax
+  if (length(locmaxi)>0){
+    locmax <- pracma::interp1(x = as.vector(c(newAgeOut[1],newAgeOut[locmaxi],newAgeOut[length(newAgeOut)])),
+                              as.vector(c(d2n[locmaxi[1]],d2n[locmaxi],d2n[locmaxi[length(locmaxi)]]))
+                              ,xi = newAgeOut,
+                              method = "nearest")
+    lmpct <- d2n/locmax
+  } else{
+    lmpct <-0
+  }
 
 
   #remove values that exceed maxGap
