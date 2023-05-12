@@ -156,7 +156,7 @@ spreadPaleoData <- function(age,
                               method = "nearest")
     lmpct <- d2n/locmax
   } else{
-    lmpct <-0
+    lmpct <-0.1
   }
 
 
