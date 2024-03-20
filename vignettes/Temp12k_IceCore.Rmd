@@ -1,0 +1,191 @@
+---
+title: "Temp12k_IceCore"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Temp12k_IceCore}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+**For this demonstration, we'll apply the SCC method to a small subset of the [Temp12k](https://lipdverse.org/project/temp12k/) dataset**
+```{r, message=FALSE, warning=FALSE}
+#LiPD packages
+library(compositeR)
+library(geoChronR)
+library(lipdR)
+#General Packages
+library(doParallel)
+library(dplyr)
+library(foreach)
+library(ggplot2)
+library(magrittr)
+library(purrr)
+library(tidyr)
+```
+
+**We've already loaded the LiPD files into the project data folder as "Temp12k". First we'll filter these data to only consider calibrated ice core records from the arctic for our demo.**
+```{r, message=FALSE, warning=FALSE, fig.width=6.5}
+#Load Temp12k files (already extracted) from package/data folder
+Temp12k <- Temp12k
+#Filter for demonstration
+fTS <- Temp12k[which((pullTsVariable(Temp12k,'geo_latitude') > 50) & 
+                     (tolower(pullTsVariable(Temp12k,'archiveType')) == 'glacierice') &
+                     (tolower(pullTsVariable(Temp12k,'paleoData_units')) == 'degc') &
+                     pullTsVariable(Temp12k,'climateInterpretation1_seasonalityGeneral') %in% c('annual','summeronly','winteronly') 
+                     )]
+#Map data
+plot(geoChronR::mapTs(fTS,color='dataSetName',size=4))
+```
+
+**Now let's look at the timeseries data.** 
+
+- You'll notice that the data have different temporal resolutions. 
+- Additionally, some data are provided as absolute temperature values, but some are anomalies.
+
+```{r, message=FALSE, warning=FALSE}
+#Age vectors to composite with
+binvec <-  seq(-50, to = 12050, by = 100)
+binAges <- rowMeans(cbind(binvec[-1],binvec[-length(binvec)]))
+```
+
+```{r, message=FALSE, warning=FALSE, fig.width=6.5}
+#Rearrange the data for plotting
+fTS_df_raw <- lipdR::ts2tibble(fTS) %>%
+  mutate(row = row_number()) %>%
+  unnest(cols = c(age, paleoData_values)) %>%
+  mutate(record = rep(row, lengths(age)))
+#Plot the raw data
+ggplot(fTS_df_raw, aes(x = age, y = paleoData_values, color = as.factor(record))) +
+  geom_line() +
+  labs(title = "Raw data", x = "age (yr BP)", y = "temperature (degC)", color = "record") +
+  theme_bw() +
+  scale_x_reverse(limits=c(12000,0))
+```
+
+**The simpleBinTs() function applies a uniform temporal resolution using a nearest neighbor interpolation**
+
+- Data within the same bin are averaged. 
+- You can "fill" empty bins with nearby values if spread=TRUE (default). Turn this off by setting spread=FALSE.  
+- Alternatively, You can use sampleEnsembleThenBinTs() which will sample from an ageEnsemble matrix or generate an ensemble using BAM. It will add value uncertainty (default=1.5)
+
+```{r, message=FALSE, warning=FALSE,  fig.width=6.5}
+#Bin the values to a common timestep
+binMat <- as.matrix(purrr::map_dfc(fTS,simpleBinTs,binvec,spread=TRUE))
+#Rearrange the data for plotting
+fTS_df_binned <- data.frame(
+  age = rep(binAges, times = ncol(binMat)),
+  paleoData_values = c(binMat),
+  record = rep(1:ncol(binMat), each = length(binAges))
+)
+#Plot the binned data
+ggplot(fTS_df_binned, aes(x = age, y = paleoData_values, color = factor(record))) +
+  geom_line() +
+  labs(title = "Binned data using simpleBinTs() at 100 year resolution", x = "age (yr BP)", y = "temperature (degC)", color = "record") +
+  theme_bw() +
+  scale_x_reverse(limits=c(12000,0))
+```
+
+**The standardizeOverInterval() function scales the data as an anomaly relative to a defined interval**
+
+- If normalizeVariance=False, only the mean value during this interval will be subtracted. 
+- If normalizeVariance=True, the variance of each record will be scaled to a constant variance within the interval. 
+- standardizeOverRandomInterval() can be used to apply a random interval within a defined range. For this, you will need to define "duration" and "searchRange" rather than "interval".
+- Because we're only removing the mean and this is a demo, we'll reduce minN (the minimum number of data points within the interval for a record to be included; default=8) so that all records are used
+
+```{r, message=FALSE, warning=FALSE,  fig.width=6.5}
+interval = c(3000,5000)
+#Standardize anomalies to reference window
+stanMat <- standardizeOverInterval(binAges,binMat,interval,normalizeVariance=FALSE,minN=5)
+compMean <- apply(stanMat,1,mean,na.rm=T)
+#Rearrange the data for plotting
+fTS_df_standardized <- data.frame(
+  age = rep(binAges, times = ncol(stanMat)),
+  paleoData_values = c(stanMat),
+  record = rep(1:ncol(stanMat), each = length(binAges))
+)
+#Plot the binned data
+ggplot(fTS_df_standardized, aes(x = age, y = paleoData_values, color = factor(record))) +
+  geom_rect(aes(xmin = interval[1], xmax = interval[2], ymin = -Inf, ymax = Inf), alpha = 0.01, fill="lightgrey", inherit.aes = FALSE) + 
+  geom_line() +
+  labs(title = "Binned & standardized data", x = "age (yr BP)", y = "temperature (degC)", color = "record") +
+  theme_bw() +
+  scale_x_reverse(limits=c(12000,0))
+#Plot the binned data with composite mean
+ggplot(fTS_df_standardized, aes(x = age, y = paleoData_values, color = factor(record))) +
+  geom_rect(aes(xmin = interval[1], xmax = interval[2], ymin = -Inf, ymax = Inf), alpha = 0.01, fill="lightgrey", inherit.aes = FALSE) + 
+  geom_line() +
+  geom_line(data=data.frame(x=binAges,y=compMean),aes(x=binAges,y=y),color='black',size=2)+
+  labs(title = "Binned & standardized data (black = composite mean)", x = "age (yr BP)", y = "temperature (degC)", color = "record") +
+  theme_bw() +
+  scale_x_reverse(limits=c(12000,0))
+```
+
+**All of the necessary parameters can be applied in one function using the compositeEnsembles() function which will produce the same results with less code**
+
+Several additional defaults for the temp12k analysis (such as compositeSCC()) apply specific preset parameters to the compositeEnsembles() function. 
+
+```{r, message=FALSE, warning=FALSE,  fig.width=6.5}
+#All of these steps can be applies useing wrapper function
+composite <- compositeEnsembles(fTS,
+                                binvec=binvec,
+                                binFun=simpleBinTs,
+                                stanFun=standardizeOverInterval,
+                                normalizeVariance=FALSE,
+                                interval=interval,
+                                minN=5)
+#This method can also be written as: composite <- compositeSCC(fTS,binvec,binFun=simpleBinTs,minN=5)
+#Plot the comparison between this wrapper function with composite mean
+ggplot(fTS_df_standardized, aes(x = age, y = paleoData_values, color = factor(record))) +
+  geom_line(data=data.frame(x=binAges,y=compMean),aes(x=binAges,y=y),color='black',size=1)+
+  geom_point(data=data.frame(x=binAges,y=composite$composite),aes(x=binAges,y=y),color='red',size=1)+
+  labs(title = "Comparison between compositeEnsembles() with step by step analysis", x = "age (yr BP)", y = "temperature (degC)", color = "record") +
+  theme_bw() +
+  scale_x_reverse(limits=c(12000,0))
+```
+
+**Now let's create an ensemble using sampleEnsembleThenBinTs**
+
+```{r, message=FALSE, warning=FALSE,  fig.width=6.5}
+#registerDoParallel(4)
+#Number of iterations to perform
+nens <- 10
+#Set up empty vectors to fill
+ensOut <- vector(mode = "list",length = nens)
+comps <- counts <- c()
+#Iterative composite
+ensOut <- foreach(i = 1:nens) %dopar% {
+  ts <- compositeEnsembles(fTS,
+                                binvec=binvec,
+                                binFun=sampleEnsembleThenBinTs,
+                                stanFun=standardizeOverInterval,
+                                normalizeVariance=FALSE,
+                                interval=interval,
+                                minN=5)
+  return(ts)
+}
+
+composite <- as.data.frame(cbind(age=binAges, map_dfc(ensOut,extract2,"composite")))
+counts <- as.data.frame(cbind(age=binAges,count=apply(map_dfc(ensOut,extract2,"timeCount"),1,mean)))
+
+q=0
+ggplot(composite,aes(x=age)) + 
+  geom_ribbon(aes(ymin = apply(composite[,-1],1,quantile,q,  na.rm=T), 
+                  ymax = apply(composite[,-1],1,quantile,1-q,na.rm=T)
+              ), fill='grey',alpha = 0.7)+
+  geom_line(aes(y=apply(composite[,-1],1,median,na.rm=T)),color='Black')+
+  labs(title = "Uncertainty added by using sampleEnsembleThenBinTs()", x = "age (yr BP)", y = "temperature (degC)") +
+  theme_bw() +
+  scale_x_reverse(limits=c(12000,0))
+```
+
+
+devtools::build_rmd("vignettes/Temp12k_IceCore.Rmd")
+
+

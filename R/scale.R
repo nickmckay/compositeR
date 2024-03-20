@@ -1,10 +1,10 @@
 scaleComposite <- function(composite,binvec,scaleYears,scaleData,scaleWindow = NA,rescale = TRUE,scaleVariance = TRUE){
 
   if(NCOL(scaleData) > 1){#ensemble! :)
-    d <- bin(scaleYears,values = scaleData[,sample.int(ncol(scaleData),size = 1)],binvec = binvec)
+    d <- geoChronR::bin(scaleYears,values = scaleData[,sample.int(ncol(scaleData),size = 1)],binvec = binvec)
 
   }else{ #nonsemble :(
-    d <- bin(scaleYears,values = scaleData,binvec = binvec)
+    d <- geoChronR::bin(scaleYears,values = scaleData,binvec = binvec)
 
   }
 
@@ -21,7 +21,7 @@ scaleComposite <- function(composite,binvec,scaleYears,scaleData,scaleWindow = N
   }
 
 
-  s <- sd(dv,na.rm = TRUE)
+  s <- stats::sd(dv,na.rm = TRUE)
 
 
   #now scale the composite to mean = 0 and sd = 1 over scale Window
@@ -29,7 +29,7 @@ scaleComposite <- function(composite,binvec,scaleYears,scaleData,scaleWindow = N
   swp <- which(compYears >= min(scaleWindow) & compYears <= max(scaleWindow))
 
   if(scaleVariance){
-  scp <- scale(composite,center = mean(composite[swp],na.rm = TRUE),scale  = sd(composite[swp],na.rm = TRUE))
+  scp <- scale(composite,center = mean(composite[swp],na.rm = TRUE),scale  = stats::sd(composite[swp],na.rm = TRUE))
 
   #rescale
   scaled <- as.matrix(scp)*s+m

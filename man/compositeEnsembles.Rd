@@ -10,6 +10,7 @@ compositeEnsembles(
   spread = TRUE,
   stanFun = standardizeMeanIteratively,
   ageVar = "age",
+  uncVar = NA,
   gaussianizeInput = FALSE,
   alignInterpDirection = TRUE,
   scope = "climate",
@@ -22,20 +23,26 @@ compositeEnsembles(
 
 \item{binvec}{A vector of bin edges for binning}
 
-\item{spread}{An option to spread values over adjacent empty years (needs a better definition here)}
+\item{spread}{An option to spread values over adjacent empty years (if TRUE, spreadPaleoData() is used by binFun)}
 
 \item{stanFun}{Function to use for standardization}
 
 \item{ageVar}{Name of the time vector in fTS}
 
+\item{uncVar}{Name of the uncertainty variable name in fTS. This is used for stanFun = sampleEnsembleThenBinTs but not simpleBinTs. If left NA or NULL, the default (1.5) will be applied.}
+
 \item{gaussianizeInput}{Optionally gaussianize input before compositing}
 
 \item{alignInterpDirection}{Optionally invert timeseries with negative interpretation_direction}
 
+\item{scope}{interpretation_scope for alignInterpDirection (default = 'climate')}
+
 \item{binFun}{Function to use for binning}
+
+\item{...}{parameters to pass to stanFun}
 }
 \value{
-
+a list. The main composite is in the list$composite matrix (needs a better definition here) TODO
 }
 \description{
 Composite with uncertainty

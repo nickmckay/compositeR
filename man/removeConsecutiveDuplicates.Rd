@@ -7,10 +7,10 @@
 removeConsecutiveDuplicates(spreadValues)
 }
 \arguments{
-\item{spreadValues}{}
+\item{spreadValues}{a vector of values}
 }
 \value{
-
+a matrix vector
 }
 \description{
 remove consecutive duplicates

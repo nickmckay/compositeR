@@ -14,10 +14,20 @@ standardizeOverRandomInterval(
 )
 }
 \arguments{
-\item{minN}{}
+\item{ages}{vector of ages. Each age corresponds to a row in pdm}
+
+\item{pdm}{matrix of binned paleoData values}
+
+\item{duration}{length of the interval to standardize the data within}
+
+\item{searchRange}{the age range to which the interval range will be sampled from}
+
+\item{normalizeVariance}{Should the pdm be scaled to a uniform mean (FALSE) or variance and mean (TRUE) (default = TRUE)}
+
+\item{minN}{minimum number length of de within the interval to calculate}
 }
 \value{
-
+a matrix of standardized values
 }
 \description{
 standardizeOverRandomInterval

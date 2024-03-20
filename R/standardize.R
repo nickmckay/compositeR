@@ -1,12 +1,12 @@
 #' standardizeOverInterval
 #'
-#' @param ages
-#' @param pdm
-#' @param interval
-#' @param minN
-#' @param normalizeVariance
+#' @param ages vector of ages. Each age corresponds to a row in pdm
+#' @param pdm matrix of binned paleoData values
+#' @param interval the age range to use for standardizing the data
+#' @param minN minimum number length of de within the interval to calculate
+#' @param normalizeVariance Should the pdm be scaled to a uniform mean (FALSE) or variance and mean (TRUE) (default = TRUE)
 #'
-#' @return
+#' @return a matrix of standardized values
 #' @export
 standardizeOverInterval <- function(ages,pdm,interval,minN = 8,normalizeVariance = TRUE){
 
@@ -28,7 +28,7 @@ standardizeOverInterval <- function(ages,pdm,interval,minN = 8,normalizeVariance
 
   spdm <- pdm[wa,]
   sm <- apply(spdm,2,mean,na.rm = TRUE)
-  ss <- apply(spdm,2,sd,na.rm = TRUE)
+  ss <- apply(spdm,2,stats::sd,na.rm = TRUE)
 
 
   #check which cols have enough data in the window
@@ -52,16 +52,17 @@ standardizeOverInterval <- function(ages,pdm,interval,minN = 8,normalizeVariance
   return(scaledPdm)
 }
 
+
 #' standardizeOverRandomInterval
 #'
-#' @param ages
-#' @param pdm
-#' @param duration
-#' @param searchRange
-#' @param normalizeVariance
-#' @param minN
+#' @param ages vector of ages. Each age corresponds to a row in pdm
+#' @param pdm matrix of binned paleoData values
+#' @param duration length of the interval to standardize the data within
+#' @param searchRange the age range to which the interval range will be sampled from
+#' @param normalizeVariance Should the pdm be scaled to a uniform mean (FALSE) or variance and mean (TRUE) (default = TRUE)
+#' @param minN minimum number length of de within the interval to calculate
 #'
-#' @return
+#' @return a matrix of standardized values
 #' @export
 standardizeOverRandomInterval <- function(ages,pdm,duration,searchRange,normalizeVariance = TRUE,minN = 8){
 
@@ -120,7 +121,7 @@ standardizeOverRandomInterval <- function(ages,pdm,duration,searchRange,normaliz
     spdm <- as.matrix(pdm[pass,i])
 
     sm <- mean(spdm,na.rm = TRUE)
-    ss <- sd(removeConsecutiveDuplicates(spdm),na.rm = TRUE)
+    ss <- stats::sd(removeConsecutiveDuplicates(spdm),na.rm = TRUE)
     #scale the matrix
     if(normalizeVariance){
       scaledPdm[,i] <- scale(pdm[,i],center = sm,scale = ss)
@@ -142,10 +143,10 @@ standardizeOverRandomInterval <- function(ages,pdm,duration,searchRange,normaliz
 
 #' recordRMSE
 #'
-#' @param td
-#' @param palMat
+#' @param td output of standardizeOverRandomInterval
+#' @param palMat matrix of paleoData values
 #'
-#' @return
+#' @return list with RMSE and Bias vectores
 #' @export
 recordRMSE <- function(td,palMat){
   #difference matrix
@@ -187,20 +188,19 @@ optimizeMean <- function(m,td,palMat){
   return(recordRMSE(ntd,palMat)$totalRMSE)
 }
 
+
 #' standardizeMeanIteratively
 #'
-#' @param ages vector of ages
-#' @param pdm matrix of binned paleodata
-#' @param duration length of interval over which to standardize
-#' @param searchRange
-#' @param normalizeVariance
-#' @param thresh
-#' @param minN
+#' @param ages vector of ages. Each age corresponds to a row in pdm
+#' @param pdm matrix of binned paleoData values
+#' @param duration length of the interval to standardize the data within
+#' @param searchRange the age range to which the interval range will be sampled from
+#' @param normalizeVariance Should the pdm be scaled to a uniform mean (FALSE) or variance and mean (TRUE) (default = TRUE)
+#' @param thresh threshold for mean RMSE
+#' @param minN minimum number length of de within the interval to calculate
 #'
-#' @return
+#' @return a matrix of standardized values
 #' @export
-#'
-#' @examples
 standardizeMeanIteratively <- function(ages,
                                        pdm,
                                        duration,
@@ -221,7 +221,7 @@ standardizeMeanIteratively <- function(ages,
 
   #remove records that failed (this should potentially cause an error in the future)
   start[!is.finite(start)] <- NA
-  colsds <- apply(pdm,2,sd,na.rm =TRUE)
+  colsds <- apply(pdm,2,stats::sd,na.rm =TRUE)
   filledBins <- apply(pdm,2,function(x) sum(is.finite(x)))
 
   bad <- which(colSums(is.finite(start))==0 | colsds < 0.1 | filledBins < minN)
