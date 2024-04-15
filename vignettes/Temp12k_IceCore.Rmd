@@ -144,7 +144,7 @@ ggplot(fTS_df_standardized, aes(x = age, y = paleoData_values, color = factor(re
 **Once the data are binned and standardized, use can calculate the composite mean**
 
 ```{r, message=FALSE, warning=FALSE,  fig.width=6.5}
-#Calcualte weighted mean of standardized records
+#Calculate weighted mean of standardized records
 compMean <- apply(stanMat,1,mean,na.rm=T)
 #Plot the binned data with composite mean
 ggplot(fTS_df_standardized, aes(x = age, y = paleoData_values, color = factor(record))) +

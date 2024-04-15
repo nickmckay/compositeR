@@ -37,10 +37,10 @@ plot.paleoComposite <- function(x,...){
 
 
 plotComposite <- function(compositeList, ageUnits = 'yr BP',valUnits='standardized',title='composite proxy record', combine=TRUE,...){
-  ar <- rev(range(compositeList$composite$age))
+  ar <- rev(range(compositeList$ages))
   #Plot
-  ensRibbon <- geoChronR::plotTimeseriesEnsRibbons(X=list(values = compositeList$composite$age, units=ageUnits, variableName='age'),
-                                                     Y=list(values = compositeList$composite[,-1],units=valUnits, variableName='composite anomaly'),...)+
+  ensRibbon <- geoChronR::plotTimeseriesEnsRibbons(X=list(values = compositeList$ages, units=ageUnits, variableName='age'),
+                                                     Y=list(values = compositeList$composite,units=valUnits, variableName='composite anomaly'),...)+
       theme_bw()
   # Add x axis
   ensRibbon <- suppressMessages(ensRibbon +
@@ -51,12 +51,11 @@ plotComposite <- function(compositeList, ageUnits = 'yr BP',valUnits='standardiz
 
   #
   #Plot Count
-  bs = abs(stats::median(diff(compositeList$composite$age)))
-  tsAvailability <- ggplot2::ggplot(compositeList$proxyUsed)+
-    geom_bar(stat="identity",aes(x=age,y=apply(compositeList$proxyUsed %>%
-                                                 dplyr::select(-age),1,sum)),
+  bs = abs(stats::median(diff(compositeList$ages)))
+  tsAvailability <- ggplot2::ggplot()+
+    geom_bar(stat="identity",aes(x=compositeList$ages,y=apply(compositeList$proxyUsed,1,sum)),
              fill='lightgrey',color='darkgrey',width=bs)+
-    scale_y_continuous(limits=c(0,ncol(compositeList$proxyUsed)),expand=c(0,0),name='count')+
+    scale_y_continuous(limits=c(0,ncol(compositeList$proxyUsed)*1.1),expand=c(0,0),name='count')+
     scale_x_reverse(limits=c(ar[1]+bs/2,ar[2]-bs/2),expand=c(0,0),name=paste0('age (',ageUnits,')')) + theme_bw()
   #
   #Combine
@@ -92,9 +91,9 @@ print.paleoComposite <- function(x,...){
 #' @export
 printComposite <- function(compositeList){ #com params.to.print = c("cpt.fun","minimum.segment.length","method","penalty","ncpts.max")){
   #
-  new_df <- data.frame(age=compositeList$composite$age,
-                       median=round(apply(compositeList$composite[,-1],1,median,na.rm=T),2),
-                       count=apply(compositeList$proxyUsed[,-1],1,sum,na.rm=T))
+  new_df <- data.frame(age=compositeList$ages,
+                       median=round(apply(compositeList$composite,1,median,na.rm=T),4),
+                       count=round(apply(compositeList$proxyUsed,1,sum,na.rm=T)))
   messages <- list()
 
   #Composote created
@@ -103,12 +102,12 @@ printComposite <- function(compositeList){ #com params.to.print = c("cpt.fun","m
   messages[[1]] <- glue("Composite created for ages: {ar} yr BP at {res} year resolution")
 
   #Number of records
-  proxyN <- crayon::green(NCOL(compositeList$proxyUsed[,-1]))
+  proxyN <- crayon::green(NCOL(compositeList$proxyUsed))
   ar <- crayon::green(paste(range((new_df %>% dplyr::filter(count==max(new_df$count,na.rm=T)))$age), collapse='-'))
   messages[[2]] <- glue("{proxyN} proxy records used. The maximum data density occurs between {ar} yr BP")
 
   #ensembles
-  messages[[3]] <- glue("{crayon::green(NCOL(compositeList$composite[,-1]))} ensembles generated")
+  messages[[3]] <- glue("{crayon::green(NCOL(compositeList$composite))} ensembles generated")
   agemin <- new_df$age[new_df$median==min(new_df$median)]
   agemax <- new_df$age[new_df$median==max(new_df$median)]
   messages[[4]] <- glue("The maximum median value occurs at {crayon::red(agemax)} yr BP.")
@@ -117,4 +116,5 @@ printComposite <- function(compositeList){ #com params.to.print = c("cpt.fun","m
   #print
   for (m in messages){print(m)}
   print(utils::head(new_df))
+  #print(new_df)
 }

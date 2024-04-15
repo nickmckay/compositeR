@@ -175,7 +175,20 @@ compositeEnsembles2 <- function(fTS,
     dplyr::summarize(dplyr::across(dplyr::everything(), sum)/nens) %>%
     stats::setNames(c('age',lipdR::pullTsVariable(fTS,'paleoData_TSid')))
   # Return
-  out <- list(composite = compMat, proxyVals = proxyMat, proxyUsed = proxyPctUsed)
+  out <- list(ages =  compMat$age,
+              composite = compMat[,-1],
+              proxyVals = proxyMat[,-1],
+              proxyUsed = proxyPctUsed[,-1])
+  out[['paramaters']] <- data.frame(nens=nens,
+                                    ageVar=ageVar,
+                                    uncVar=uncVar,
+                                    weights=weights,
+                                    samplePct=samplePct,
+                                    scale=scale,
+                                    spread=spread,
+                                    gaussianizeInput=gaussianizeInput,
+                                    alignInterpDirection=alignInterpDirection,
+                                    scope=scope)
   return(new_composite(out))
 }
 

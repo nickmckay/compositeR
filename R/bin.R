@@ -72,11 +72,11 @@ spreadPaleoData <- function(age,
   value <- value[ageidx]
   #if any duplicate ages, remove (calc average of values for same age)
   if (length(age) != (length(unique(age)))){
-    ages <- sort(unique(age))
+    agesnew <- sort(unique(age))
     vals <- c()
-    for (a in ages){vals <- c(vals,mean(value[ages==a],na.rm=T))}
+    for (a in agesnew){vals <- c(vals,mean(value[age==a],na.rm=T))}
     value <- vals
-    age <- ages
+    age <- agesnew
   }
 
   #find max age to cutoff. This is an issue if the newAge vector is too long for the record

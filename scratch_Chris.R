@@ -5,7 +5,7 @@ library(geoChronR)
 library(tidyverse)
 library(sf)
 library(dggridR)
-#function to create "square" regions
+# function to create "square" regions
 # defineRegion <- function(latmin,latmax,lonmin,lonmax){
 #   nlon = length(seq(lonmin,lonmax,1))
 #   nlat = length(seq(latmin,latmax,1))
@@ -17,64 +17,85 @@ library(dggridR)
 #     sf::st_cast("POLYGON")
 #   return(Poly_Coord_df)
 # }
-# #set arctic circle to plot as panel boundary
-# arcticCircle <- data.frame(id="A",lon=seq(-180,180), lat= rep(58,length(seq(-180,180))))%>%
-#   st_as_sf(coords = c("lon", "lat"), crs = 4326) %>%
-#   summarise((geometry = sf::st_combine(geometry))) %>%
-#   st_cast("MULTILINESTRING")
-# #get arctic polygons
-# arctic <- defineRegion(58,90,-180,180)
-# # polygonsArctic  <- sf::st_intersection(polygons,arctic)  %>%
-# #   mutate(lon=st_coordinates(st_centroid(.))[,1]) %>%
-# #   mutate(lat=st_coordinates(st_centroid(.))[,2]) %>%
-# #   mutate(area_km2 = units::drop_units(st_area(.)/1000000)) #km^2
-# #countries to plot
-# countries <- st_as_sf(rworldmap::getMap("high"))
-# countriesArctic <- sf::st_intersection(countries,arctic)
-# #ice sheet list (vector names correspond to age)
-#
-#
-#
-#
+#set arctic circle to plot as panel boundary
+arcticCircle <- data.frame(id="A",lon=seq(-180,180), lat= rep(58,length(seq(-180,180))))%>%
+  st_as_sf(coords = c("lon", "lat"), crs = 4326) %>%
+  summarise((geometry = sf::st_combine(geometry))) %>%
+  st_cast("MULTILINESTRING")
+#get arctic polygons
+arctic <- defineRegion(58,90,-180,180)
+# polygonsArctic  <- sf::st_intersection(polygons,arctic)  %>%
+#   mutate(lon=st_coordinates(st_centroid(.))[,1]) %>%
+#   mutate(lat=st_coordinates(st_centroid(.))[,2]) %>%
+#   mutate(area_km2 = units::drop_units(st_area(.)/1000000)) #km^2
+#countries to plot
+countries <- st_as_sf(rworldmap::getMap("high"))
+countriesArctic <- sf::st_intersection(countries,arctic)
+#ice sheet list (vector names correspond to age)
 
 
 
 
+
+
+
+#Load data
 project <- 'RAW'
-dir <- '/Users/chrishancock/Library/CloudStorage/OneDrive-NorthernArizonaUniversity/Research/Manuscript/RAW'
-RAWts     <- readRDS(file.path(dir,'Data','RAW_LiPDts.RDS'))
-shiftsAll <- readRDS(file.path(dir,'Data',paste(project,'meanShifts.RDS',sep='_')))
+dir <- '/Users/chrishancock/Library/CloudStorage/OneDrive-NorthernArizonaUniversity/Research/Manuscript/'
+RAWts     <- readRDS(file.path(dir,project,'Data','RAW_LiPDts.RDS'))
+shiftsAll <- readRDS(file.path(dir,project,'Data',paste(project,'meanShifts.RDS',sep='_')))
 
-
+#Filter data
 shifts <- shiftsAll %>% filter(interpVar %in% c('Temperature')) %>% filter(interpSeason %in% c('Annual','Summer','Winter'))
 fTS <- RAWts[(pullTsVariable(RAWts,'paleoData_TSid') %in% shifts$paleoData_TSid)]
 binvec <- sort(unique(c(shifts$time_start,shifts$time_end)))
 binyrs <- sort(unique(c(shifts$time_mid)))
 
-
-# Add climateInterpretation1_interpDirection which is missing (or labeled differently for some records)
-for (i in 1:length(fTS)){
-  direction <- median((shifts%>%filter(paleoData_TSid==fTS[[i]]$paleoData_TSid))$interpDir)
-  fTS[[i]]$climateInterpretation1_interpDirection <- direction
+#find weights
+dggs <- dgconstruct(res=4,pole_lat_deg=90,topology='HEXAGON')
+polygons <- dggridR::dgearthgrid(dggs)
+#locate each record's cell
+shifts <- shifts %>% dplyr::mutate(cell=(dggridR::dgGEO_to_SEQNUM(dggs,geo_longitude,geo_latitude)$seqnum))
+#add weights which consider number of record within each cell and the number of records at each site
+shifts$weight <- NA
+for (c in unique(shifts$cell)){
+  cellShifts <- (shifts %>% filter (cell == c))
+  cellweight <- 1/length(unique(cellShifts$dataSetName))
+  for (s in unique(cellShifts$site)){
+    proxyweight <- cellweight/length(unique((cellShifts %>% filter(site == s))$paleoData_TSid))
+    shifts$weight[which((shifts$cell==c) & (shifts$site==s))] <- proxyweight
+  }
 }
-#add weights
+
+# Add weight and climateInterpretation1_interpDirection (which is missing (or labeled differently for some records))
+for (i in 1:length(fTS)){
+  sel <- (shifts%>%filter(paleoData_TSid==fTS[[i]]$paleoData_TSid))
+  fTS[[i]]$climateInterpretation1_interpDirection <- sel$interpDir[1]
+  fTS[[i]]$geo_weight <- sel$weight[1]
+}
 
 
-
-
+#do composite
 ensOut <- compositeEnsembles2(
-  fTS = fTS[1:30],
+  fTS = fTS,
+  nens = 100,
   binvec = binvec,
-  nens = 20,
-  stanFun = standardizeOverRandomInterval,
+  binFun = sampleEnsembleThenBinTs,
   ageVar = "ageEnsemble",
   uncVar = "paleoData_temperature12kUncertainty",
-  binFun = sampleEnsembleThenBinTs,
+  weights = "geo_weight",
+  stanFun = standardizeOverRandomInterval,
   searchRange = c(1000,11000),
-  duration = 4000
+  duration = 4000,
+  normalizeVariance = TRUE,
+  gaussianizeInput = TRUE,
+  scale = FALSE,
+  spread = TRUE,
+  samplePct = 1,
 )
 
-
+plot(ensOut)
+print(ensOut)
 
 
 
