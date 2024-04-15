@@ -154,8 +154,12 @@ simpleBinTs <- function(ts,
                         spreadMax = as.numeric(abs(stats::quantile(abs(diff(sort(ts[[ageVar]]))),probs = .75,na.rm = TRUE))),
                         gaussianizeInput= FALSE,
                         alignInterpDirection = TRUE,
-                        scope = "climate")
-  {
+                        scope = "climate"){
+
+  #Check not ensemble
+  if(NCOL(ts[[ageVar]])>1){stop('ages must be given to simpleBinTs() as a 1d vector not a matrix. Use sampleEnsembleThenBinTs() or calculate the ensemble median')}
+  if(NCOL(ts[['paleoData_values']])>1){stop('paleoDataValues must be given to simpleBinTs() as a 1d vector not a matrix. Use sampleEnsembleThenBinTs() or calculate the ensemble median')}
+
   #Spread data if TRUE (default = TRUE)
   if(spread){#estimate for contiguous sampling with a nearest neighbor interpolation
     sp <- spreadPaleoData(age = ts[[ageVar]],
@@ -230,7 +234,7 @@ sampleEnsembleThenBinTs <- function(ts,
                                     gaussianizeInput = FALSE,
                                     alignInterpDirection = TRUE,
                                     scope = "climate"){
-
+  ts_sampled <- ts
   #sample from ageEnsemble
   if(is.null(ts[[ageVar]])){
     stop(print(paste0(ts$dataSetName,": has a null for its age variable")))
@@ -240,6 +244,7 @@ sampleEnsembleThenBinTs <- function(ts,
   }else{#simulate
     thisAge <- geoChronR::simulateBam(matrix(1,nrow = length(ts[[ageVar]])),as.matrix(ts[[ageVar]]),model = bamModel,ageEnsOut = TRUE)$ageEns
   }
+  ts_sampled[[ageVar]] <- thisAge
 
   #Now sample from paleoData
   if(NCOL(ts$paleoData_values) > 1){#draw from ensemble
@@ -252,12 +257,13 @@ sampleEnsembleThenBinTs <- function(ts,
     }
     thisPdv <- ts$paleoData_values+simulateAutoCorrelatedUncertainty(sd = tu,n = length(ts$paleoData_values),ar = ar)
   }
+  ts_sampled$paleoData_values <- thisPdv
 
   #check
   if(length(thisPdv) != length(thisAge)){stop("Paleodata and ages must have the same number of observations.")}
 
   #bin values using simpleBinTs()
-  binnedVals <- simpleBinTs(ts, binvec, ageVar = ageVar, spread = spread,
+  binnedVals <- simpleBinTs(ts_sampled, binvec, ageVar = ageVar, spread = spread,
                             spreadBy = spreadBy,
                             spreadMax = spreadMax,
                             gaussianizeInput = gaussianizeInput,

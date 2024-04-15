@@ -88,39 +88,20 @@ compositeEnsembles2 <- function(fTS,
   binvec <- sort(binvec)
   binAges <- rowMeans(cbind(binvec[-1],binvec[-length(binvec)]))
 
-
   # Warnings # #############################
   # Check that necessary variables are provided in lipd files
   for (name in c("paleoData_TSid",ageVar)){
     check <- unlist(lapply(lipdR::pullTsVariable(fTS,name),is.null))
-    if (sum(check)>0){
-      stop(paste0("ERROR: No '",name,"' variable for fTS[c(",(paste(which(!check),collapse=', ')),")]"))
-    }
+    if (sum(check)>0){ stop(paste0("ERROR: No '",name,"' variable for fTS[c(",(paste(which(!check),collapse=', ')),")]")) }
   }
   # binvec
-  if(sum(stats::median(diff(binvec)) != diff(binvec)) > 0){
-    warning("binvec has uneven spacing. This vector should be created using seq(ageMin,ageMax,binsize")
-  }
+  if(sum(stats::median(diff(binvec)) != diff(binvec)) > 0){warning("binvec has uneven spacing. This vector should be created using seq(ageMin,ageMax,binsize")}
   # alignInter
   if (alignInterpDirection){
     likelyname <- paste0(scope,"Interpretation1_interpDirection")
-    if(sum(is.na(lipdR::pullTsVariable(fTS,likelyname)))>1){
-      warning(paste0("Warning with alignInterpDirection and scope. Variable name '",likelyname,"' not found for fTS[ c(",paste(which(is.na(lipdR::pullTsVariable(fTS,likelyname))),collapse=', '),")]"))
-    }
-    if (sum(!(tolower(unique(lipdR::pullTsVariable(fTS,likelyname))) %in% c("positive","negative",-1,1,NA)))>0){
-      warning(paste0("Unexpected ",likelyname," found in fTS. This value should be positive/negative or 1/-1"))
-    }
+    if(sum(is.na(lipdR::pullTsVariable(fTS,likelyname)))>1){warning(paste0("Warning with alignInterpDirection and scope. Variable name '",likelyname,"' not found for fTS[ c(",paste(which(is.na(lipdR::pullTsVariable(fTS,likelyname))),collapse=', '),")]"))}
+    if (sum(!(tolower(unique(lipdR::pullTsVariable(fTS,likelyname))) %in% c("positive","negative",-1,1,NA)))>0){ warning(paste0("Unexpected ",likelyname," found in fTS. This value should be positive/negative or 1/-1"))}
   }
-  # searchRange and duration
-  if (!exists("searchRange")){
-    searchRange <- range(binvec)
-    warning(paste("searchRange not provided. Defaulting the standarization age range to",paste(range(binvec),collapse=' to '),' from binvec'))
-  }
-  if (!exists("duration")){
-    duration <- diff(range(binvec))
-    warning(paste("duration not provided. Defaulting the standarization duration to",diff(range(binvec)),'years of searchRange'))
-  }
-  exists("duration")
 
   # weights
   if (is.na(weights)){ # weight all equally
@@ -139,7 +120,8 @@ compositeEnsembles2 <- function(fTS,
 
   # Bin and standardize the timeseries for each iteration  # #############################
   stanMatList <- list()
-  pb <- progress::progress_bar$new(total = nens, format = "binning and aligning the data. This may take some time depending on the number of records (length(fTS)) and number of ensembles (nens) [:bar] :percent | ETA: :eta")
+  print("binning and aligning the data. This may take some time depending on the number of records (length(fTS)) and number of ensembles (nens)")
+  pb <- progress::progress_bar$new(total = nens, format = "[:bar] :percent | ETA: :eta")
   for (i in 1:nens){
     set.seed(i)
     #Align paleodata ages to common binstep
