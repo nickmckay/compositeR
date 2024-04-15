@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
+```#{r setup}
 library(compositeR)#devtools::install_github("nickmckay/compositeR")
 library(geoChronR) #devtools::install_github("nickmckay/geoChronR")
 library(lipdR)     #devtools::install_github("nickmckay/lipd-utilities",subdir = "R")
@@ -25,7 +25,7 @@ library(foreach)
 library(doParallel)
 ```
 
-```{r, message=FALSE, warning=FALSE,  fig.width=6.5}
+```#{r, message=FALSE, warning=FALSE,  fig.width=6.5}
 #Data to use
 Temp12k <- Temp12k
 sg <- pullTsVariable(Temp12k, "climateInterpretation1_seasonalityGeneral")
@@ -84,7 +84,7 @@ No spatial gridding was applied, but the records were **averaged within latitudi
 
 For this method, **errors in the proxy temperatures were either drawn from the posterior outputs of Bayesian temperature calibrations, where available in the database (n = 149, ref. 5), or simulated from the uncertainties summarized for each proxy type**. For the simulation, the uncertainties were assumed to be auto-correlated, with an **AR1 coefficient of 0.71**, such that 50% of the variance in the uncertainties is auto-correlated. This model reflects the contribution of correlated bias, as well as uncorrelated uncertainties. **Age uncertainties were simulated using the Banded Age Model (BAM)27, with a Poisson model and symmetric 5% over- and under-counting probabilities**. Although BAM is designed for layer-counted age modelling, it produces reasonable first-order estimates of age uncertainty, and only requires the original ages as input. To demonstrate this, we compared the BAM-based ensembles produced here to 108 proxy datasets with age models produced by Bacon28. The root mean square error (RMSE) of the ensemble members was calculated relative to the median of each age ensemble over the past 12,000 years. The Bacon models had a median (mean) RMSE of 198 (216) years, whereas the BAM models produced here had a median (mean) RMSE of 251 (260) years. We find that BAM produces age ensembles with uncertainty ranges that are comparable to, but slightly larger than Bacon for these datasets. Although BAM does not accurately represent the full uncertainty structure, it ultimately produces similar, and slightly more conservative, results. Before compositing, DCC randomly selected separate temperature and age ensemble members, thereby effectively propagating these uncertainties through the subsequent compositing steps."
 
-```{r, message=FALSE, warning=FALSE,  fig.width=6.5}
+```#{r, message=FALSE, warning=FALSE,  fig.width=6.5}
 #Defaults: duration = 3000, searchRange = c(0,7000), gaussianizeInput = FALSE, normalizeVariance = FALSE, 
 #          stanFun = standardizeMeanIteratively
 #          binFun = sampleEnsembleThenBinTs
@@ -107,7 +107,7 @@ ensOut <- foreach(i = 1:nens) %dopar% {
 
 ```
 
-```{r, message=FALSE, warning=FALSE,  fig.width=6.5}
+```#{r, message=FALSE, warning=FALSE,  fig.width=6.5}
 reformatCompositeOut <- function(ensOut,X,groupVar,weights=NA){
   if (is.na(weights)){
     w<-rep(1,length(groupVar))
@@ -136,7 +136,7 @@ compDf <- reformatCompositeOut(ensOut,binAges,groupVar)
 
 ```
 
-```{r, message=FALSE, warning=FALSE,  fig.width=6.5}
+``` #{r, message=FALSE, warning=FALSE,  fig.width=6.5}
 q = 0
 plt <- ggplot() +
   geom_ribbon(aes(x=compDf$average$age,

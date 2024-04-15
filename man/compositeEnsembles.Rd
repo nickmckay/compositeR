@@ -10,7 +10,6 @@ compositeEnsembles(
   spread = TRUE,
   stanFun = standardizeMeanIteratively,
   ageVar = "age",
-  uncVar = NA,
   gaussianizeInput = FALSE,
   alignInterpDirection = TRUE,
   scope = "climate",
@@ -28,8 +27,6 @@ compositeEnsembles(
 \item{stanFun}{Function to use for standardization}
 
 \item{ageVar}{Name of the time vector in fTS}
-
-\item{uncVar}{Name of the uncertainty variable name in fTS. This is used for stanFun = sampleEnsembleThenBinTs but not simpleBinTs. If left NA or NULL, the default (1.5) will be applied.}
 
 \item{gaussianizeInput}{Optionally gaussianize input before compositing}
 

@@ -5,7 +5,6 @@
 #' @param binvec A vector of bin edges for binning
 #' @param spread An option to spread values over adjacent empty years (if TRUE, spreadPaleoData() is used by binFun)
 #' @param stanFun Function to use for standardization
-#' @param uncVar Name of the uncertainty variable name in fTS. This is used for stanFun = sampleEnsembleThenBinTs but not simpleBinTs. If left NA or NULL, the default (1.5) will be applied.
 #' @param ageVar Name of the time vector in fTS
 #' @param gaussianizeInput Optionally gaussianize input before compositing
 #' @param alignInterpDirection Optionally invert timeseries with negative interpretation_direction
@@ -13,6 +12,7 @@
 #' @param binFun Function to use for binning
 #' @param ... parameters to pass to stanFun
 #'
+#' @importFrom magrittr %>%
 #'
 #' @return a list. The main composite is in the list$composite matrix (needs a better definition here) TODO
 #' @export
@@ -21,21 +21,18 @@ compositeEnsembles <- function(fTS,
                                spread = TRUE,
                                stanFun = standardizeMeanIteratively,
                                ageVar = "age",
-                               uncVar = NA,
                                gaussianizeInput = FALSE,
                                alignInterpDirection = TRUE,
                                scope = "climate",
                                binFun = sampleEnsembleThenBinTs,
                                ...){
+
   binAges <- rowMeans(cbind(binvec[-1],binvec[-length(binvec)]))
+
   #Align paleodata ages to common binstep
-  if (is.character(uncVar)){
-    binMatR <- as.matrix(purrr::map_dfc(fTS,binFun,binvec,ageVar = ageVar, uncVar=uncVar, spread = spread,gaussianizeInput = gaussianizeInput,alignInterpDirection = alignInterpDirection, scope = scope))
-  }
-  else{
-    binMatR <- as.matrix(purrr::map_dfc(fTS,binFun,binvec,ageVar = ageVar,                spread = spread,gaussianizeInput = gaussianizeInput,alignInterpDirection = alignInterpDirection, scope = scope))
-  }
+  binMatR <- as.matrix(purrr::map_dfc(fTS,binFun,binvec,ageVar = ageVar,spread = spread,gaussianizeInput = gaussianizeInput,alignInterpDirection = alignInterpDirection, scope = scope))
   binMatR[is.nan(binMatR)] <- NA
+
   #Compute composites
   compMat <- stanFun(ages = binAges,pdm = binMatR,...)
   #Format output
@@ -50,187 +47,242 @@ compositeEnsembles <- function(fTS,
 }
 
 
-#
-#' Composite with uncertainty
+
 #'
-#' @param fTS TS object of the timeseries that you want to composite
-#' @param binvec A vector of bin edges for binning
-#' @param nens = The number of iterations to randomize over
-#' @param spread An option to spread values over adjacent empty years (if TRUE, spreadPaleoData() is used by binFun)
-#' @param stanFun Function to use for standardization
-#' @param uncVar Uncertainty value. Enter a string to identify the variable name in fTS. Use a number to provide a unifomr value to all records. This is used for stanFun = sampleEnsembleThenBinTs but not simpleBinTs.
-#' @param ageVar Name of the time vector in fTS
-#' @param gaussianizeInput Optionally gaussianize input before compositing
-#' @param alignInterpDirection Optionally invert timeseries with negative interpretation_direction
-#' @param scope interpretation_scope for alignInterpDirection (default = 'climate')
-#' @param binFun Function to use for binning
-#' @param ... parameters to pass to stanFun
+#' create paleoclimate composite ensembles from a list of LiPD timeseries. A revised version of compositeEnsembles by Chris Hancock (2024)
 #'
+#' @import dplyr
+#' @param fTS TS list of the timeseries that you want to composite
+#' @param nens the number of ensembles to create
+#' @param stanFun function to use for standardization (either standardizeOverRandomInterval, standardizeMeanIteratively, or standardizeOverInterval)
+#' @param binFun function to use for binning (either sampleEnsembleThenBinTs or simpleBinTS)
+#' @param uncVar uncertainty variable  \cr - Use a string to identify a fTS variable name or use a number to provide a uniform value to all records.  \cr - This is used if stanFun == sampleEnsembleThenBinTs but not for simpleBinTs.
+#' @param weights weights for calculating the composite mean. \cr - For example, you may want to weight each record in a region relative to the number of total records from a single site.  \cr - Use a string to identify a fTS variable name, otherwise all values will be weighted equally.
+#' @param samplePct the percent of records to used for each ensemble.  \cr - If length(fTS)*samplePct <= 3, this is ignored.  \cr - Default = 1 which means that 100 percent of records are used for each ensemble
+#' @param scale TODO
+#' @inheritParams sampleEnsembleThenBinTs
+#' @inheritDotParams standardizeOverRandomInterval duration searchRange minN normalizeVariance
 #'
-#' @return a list. The main composite is in the list$composite matrix (needs a better definition here) TODO
+#' @return a composite list class with three tibbles:
+#' \cr (1) The composite [dims = length(binvec) x (nens + 1 for age column)]
+#' \cr (2) the standardized values [dims = length(binvec) x (length(fTS) + 1 for age column)], and
+#' \cr (3) a count of when proxy values are used in the compilation [same dims as 2]
 #' @export
 compositeEnsembles2 <- function(fTS,
                                 binvec,
                                 nens = 100,
-                                spread = TRUE,
-                                stanFun = standardizeMeanIteratively,
+                                stanFun = standardizeOverRandomInterval,
                                 ageVar = "age",
                                 uncVar = NA,
+                                weights = NA,
+                                samplePct = 1,
+                                scale = FALSE,
+                                spread = TRUE,
                                 gaussianizeInput = FALSE,
                                 alignInterpDirection = TRUE,
                                 scope = "climate",
                                 binFun = sampleEnsembleThenBinTs,
                                 ...){
-  # Bin ages
+  # Bin ages # #############################
+  if(!is.numeric(binvec)){stop("binvec must be numeric")}
+  binvec <- sort(binvec)
   binAges <- rowMeans(cbind(binvec[-1],binvec[-length(binvec)]))
-  # Do math
-  doParallel::registerDoParallel(2)
-  stanMatList <- foreach(i = 1:nens) %dopar% {
+
+
+  # Warnings # #############################
+  # Check that necessary variables are provided in lipd files
+  for (name in c("paleoData_TSid",ageVar)){
+    check <- unlist(lapply(lipdR::pullTsVariable(fTS,name),is.null))
+    if (sum(check)>0){
+      stop(paste0("ERROR: No '",name,"' variable for fTS[c(",(paste(which(!check),collapse=', ')),")]"))
+    }
+  }
+  # binvec
+  if(sum(stats::median(diff(binvec)) != diff(binvec)) > 0){
+    warning("binvec has uneven spacing. This vector should be created using seq(ageMin,ageMax,binsize")
+  }
+  # alignInter
+  if (alignInterpDirection){
+    likelyname <- paste0(scope,"Interpretation1_interpDirection")
+    if(sum(is.na(lipdR::pullTsVariable(fTS,likelyname)))>1){
+      warning(paste0("Warning with alignInterpDirection and scope. Variable name '",likelyname,"' not found for fTS[ c(",paste(which(is.na(lipdR::pullTsVariable(fTS,likelyname))),collapse=', '),")]"))
+    }
+    if (sum(!(tolower(unique(lipdR::pullTsVariable(fTS,likelyname))) %in% c("positive","negative",-1,1,NA)))>0){
+      warning(paste0("Unexpected ",likelyname," found in fTS. This value should be positive/negative or 1/-1"))
+    }
+  }
+  # searchRange and duration
+  if (!exists("searchRange")){
+    searchRange <- range(binvec)
+    warning(paste("searchRange not provided. Defaulting the standarization age range to",paste(range(binvec),collapse=' to '),' from binvec'))
+  }
+  if (!exists("duration")){
+    duration <- diff(range(binvec))
+    warning(paste("duration not provided. Defaulting the standarization duration to",diff(range(binvec)),'years of searchRange'))
+  }
+  exists("duration")
+
+  # weights
+  if (is.na(weights)){ # weight all equally
+    w <- rep(1,length(fTS))
+  } else{
+    w <- as.vector(lipdR::pullTsVariable(fTS,weights))
+    if (is.numeric(w)){ # use this
+      w[is.na(w)] <- max(w,na.rm=T) # if this value is missing, assign it with the max w value
+    } else{ # if a character vector such as geo_SiteName, geo_Region, or archiveType, assign based on number of unique values
+      for (i in unique(w)){
+        w[w==i] <- 1/sum(w==i)
+      }
+      w <- as.numeric(w)
+    }
+  }
+
+  # Bin and standardize the timeseries for each iteration  # #############################
+  stanMatList <- list()
+  pb <- progress::progress_bar$new(total = nens, format = "binning and aligning the data. This may take some time depending on the number of records (length(fTS)) and number of ensembles (nens) [:bar] :percent | ETA: :eta")
+  for (i in 1:nens){
     set.seed(i)
     #Align paleodata ages to common binstep
     if (is.character(uncVar)){ #use uncVar in lipd file
-      binMatR <- as.matrix(purrr::map_dfc(fTS,binFun,binvec,ageVar = ageVar, uncVar=uncVar,     spread = spread, gaussianizeInput = gaussianizeInput, alignInterpDirection = alignInterpDirection, scope = scope))
+      binMatR <- suppressMessages(as.matrix(purrr::map_dfc(
+        fTS, binFun, binvec, ageVar=ageVar, uncVar=uncVar, #uncVar=uncVar
+        spread=spread, gaussianizeInput=gaussianizeInput, alignInterpDirection=alignInterpDirection, scope=scope
+        )))
     } else if (is.numeric(uncVar)){ #use a default number
-      binMatR <- as.matrix(purrr::map_dfc(fTS,binFun,binvec,ageVar = ageVar, defaultUnc=uncVar, spread = spread, gaussianizeInput = gaussianizeInput, alignInterpDirection = alignInterpDirection, scope = scope))
+      binMatR <- suppressMessages(as.matrix(purrr::map_dfc(
+        fTS, binFun, binvec, ageVar=ageVar, defaultUnc=uncVar, #defaultUnc=uncVar
+        spread=spread, gaussianizeInput=gaussianizeInput, alignInterpDirection=alignInterpDirection, scope=scope
+        )))
     } else{
-      binMatR <- as.matrix(purrr::map_dfc(fTS,binFun,binvec,ageVar = ageVar,                    spread = spread, gaussianizeInput = gaussianizeInput, alignInterpDirection = alignInterpDirection, scope = scope))
+      binMatR <- suppressMessages(as.matrix(purrr::map_dfc(
+        fTS, binFun, binvec, ageVar=ageVar,
+        spread=spread, gaussianizeInput=gaussianizeInput, alignInterpDirection=alignInterpDirection, scope=scope
+        )))
     }
+    #Sample different combination of records for iterations of the the composite
+    sampleMin <- 3 #If number of records * samplePct <= sampleMin, samplePct will be ignored
+    binMatR[,-(sample(ncol(binMatR),max(ceiling(ncol(binMatR)*samplePct),sampleMin)))] <- NA #TODO fix warnings from this
     #Standardize
-    stanMatR <- stanFun(ages=binAges,pdm=binMatR,...)
-    return(cbind(age=binAges,iteration=i,stanMatR))
+    stanMat <- stanFun(ages=binAges, pdm=binMatR, ...)
+    #Return
+    stanMatList[[i]] <- cbind(age=binAges, iteration=i, stanMat)
+    pb$tick()
   }
+
+  #Scale
+  if (scale){warning('scale not implemented yet. no scaling applied')}
+  #TODO: standardize(document)
+
   # Summarize
   stan_df <- as.data.frame(abind::abind(stanMatList,along=1))
   # Composite means (each column is a composite mean of proxies)
-  compMat <-stan_df %>%
-    dplyr::transmute(age, iteration, mean = rowMeans(select(.,-c(age,iteration)), na.rm=T)) %>%
+  compMat <- stan_df %>%
+    dplyr::transmute(age, iteration, mean = apply(dplyr::select(.,-c(age,iteration)),1,stats::weighted.mean, w=w, na.rm=T)) %>%
     dplyr::group_by(age,iteration) %>%
     tidyr::pivot_wider(names_from = iteration, values_from = mean) %>%
-    dplyr::rename_at(vars(-age),~ paste0("comp", .))
+    dplyr::rename_at(dplyr::vars(-age),~ paste0("comp", .))
   # Standardized proxy time series (each column is a proxy mean of iterations)
   proxyMat <- stan_df %>%
-    select(-iteration) %>%
-    group_by(age) %>%
-    summarize(across(everything(), mean, na.rm=T)) %>%
-    setNames(c('age',pullTsVariable(fTS,'paleoData_TSid')))
+    dplyr::select(-iteration) %>%
+    dplyr::group_by(age) %>%
+    dplyr::summarize(dplyr::across(dplyr::everything(), mean, na.rm=T)) %>%
+    stats::setNames(c('age',lipdR::pullTsVariable(fTS,'paleoData_TSid')))
   # Count of proxy values used at each time
-  proxyPctUsed <-data.frame(age=stan_df$age,!is.na(stan_df%>%select(.,-c(age,iteration)))) %>%
-    group_by(age) %>%
-    summarize(across(everything(), sum)/nens) %>%
-    setNames(c('age',pullTsVariable(fTS,'paleoData_TSid')))
+  proxyPctUsed <-data.frame(age=stan_df$age,!is.na(stan_df %>% dplyr::select(.,-c(age,iteration)))) %>%
+    dplyr::group_by(age) %>%
+    dplyr::summarize(dplyr::across(dplyr::everything(), sum)/nens) %>%
+    stats::setNames(c('age',lipdR::pullTsVariable(fTS,'paleoData_TSid')))
   # Return
-  return(list(composite = compMat, proxyVals = proxyMat, proxyUsed = proxyPctUsed))
+  out <- list(composite = compMat, proxyVals = proxyMat, proxyUsed = proxyPctUsed)
+  return(new_composite(out))
 }
 
-#
-#' Plot compositeEnsembles output
+
+
+#' Make S3 class for compositeEnsembles2
 #'
-#' @param compositeList The output of compositeEnsembles()
-#' @param ageUnits units for the age variable
-#' @param valUnits units for the composite
-#' @param title a title for the combined plot (not used if combine == FALSE)
-#' @param combine output a combined figure using egg::ggarrange or provide a list of subplots
-#' @param ... parameters to pass to geoChronR::plotTimeseriesEnsRibbons
+#' @param x list output from compositeEnsembles2()
 #'
-#' @return a combined or list of gg plots
+#' @return list output from compositeEnsembles2() as S3 class "composite"
 #' @export
-plotComposite <- function(compositeList, ageUnits = 'yr BP',valUnits='standardized',title='composite proxy record',combine=TRUE,...){
-  #Plot
-  ensRibbon <- geoChronR::plotTimeseriesEnsRibbons(X=list(values = compositeList$composite$age, units=ageUnits, variableName='age'),
-                                        Y=list(values = compositeList$composite[,-1],units=valUnits, variableName='composite anomaly'),
-                                        ...)+theme_bw()+
-                                        scale_x_reverse(limits=rev(ar),expand=c(0,0),name=paste0('age (',ageUnits,')'))
-  if (combine){ensRibbon <- ensRibbon + scale_x_reverse(limits=rev(ar),expand=c(0,0),name=' ',position="top")}
-  #
-  #Plot Count
-  bs = abs(median(diff(compositeList$composite$age)))
-  ar = c(min(compositeList$proxyVals,na.rm=T)-bs/2,max(compositeList$proxyVals,na.rm=T)+bs/2)
-  tsAvailability <- ggplot2::ggplot(compositeList$proxyUsed)+
-    geom_bar(stat="identity",aes(x=age,y=apply(compositeList$proxyUsed %>% select(-age),1,sum)),width=bs)+
-    scale_y_continuous(limits=c(0,ncol(compositeList$proxyUsed)),expand=c(0,0),name='count')+
-    scale_x_reverse(limits=rev(ar),expand=c(0,0),name=paste0('age (',ageUnits,')')) + theme_bw()
-  #
-  #Combine
-  plots <- list(compositeEns=ensRibbon,dataUsed=tsAvailability)
-  if (combine){
-    plots <-   egg::ggarrange(plots=plots,ncol=1,heights=c(2,1),top=title)
-  }
-  return(plots)
+new_composite <- function(x = list()) {
+  stopifnot(is.list(x))
+  structure(x,class = c("paleoComposite",class(list())))
 }
 
 
 
-
-
-#TO DO
-#Add spatial composites ?
-#How to sample paleo uncertainty? sampleTHenBin
-
 #'
-#' compositeSCC (Standard Calibrated Composite) with presets for Temp12k
 #'
-#' @param fTS TS object of the timeseries that you want to composite
-#' @param binvec A vector of bin edges for binning
-#' @param interval The ager range used to create the standardization interval
-#' @param ... parameters to pass to stanFun
+#' #TO DO
+#' #Add spatial composites ?
+#' #How to sample paleo uncertainty? sampleTHenBin
 #'
-#' @return a list. The main composite is in the list$composite matrix (needs a better definition here) TODO
-#' @export
+#' #'
+#' #' compositeSCC (Standard Calibrated Composite) with presets for Temp12k
+#' #'
+#' #' @param fTS TS object of the timeseries that you want to composite
+#' #' @param binvec A vector of bin edges for binning
+#' #' @param interval The ager range used to create the standardization interval
+#' #' @param ... parameters to pass to stanFun
+#' #'
+#' #' @return a list. The main composite is in the list$composite matrix (needs a better definition here) TODO
+#' #' @export
+#' #'
+#' compositeSCC <- function(fTS, binvec, interval=c(3000,5000), ...){
+#'   results <- compositeEnsembles(fTS,
+#'                                 binvec,
+#'                                 stanFun = standardizeOverInterval,
+#'                                 interval = interval,
+#'                                 spread = TRUE,
+#'                                 gaussianizeInput = FALSE,
+#'                                 normalizeVariance = FALSE,
+#'                                 ...
+#'                                 )
+#'   return(results)
+#' }
 #'
-compositeSCC <- function(fTS, binvec, interval=c(3000,5000), ...){
-  results <- compositeEnsembles(fTS,
-                                binvec,
-                                stanFun = standardizeOverInterval,
-                                interval = interval,
-                                spread = TRUE,
-                                gaussianizeInput = FALSE,
-                                normalizeVariance = FALSE,
-                                ...
-                                )
-  return(results)
-}
-
-
 #'
-#' compositeDCC (Dynamic Calibrated Composite) with presets for Temp12k
+#' #'
+#' #' compositeDCC (Dynamic Calibrated Composite) with presets for Temp12k
+#' #'
+#' #' @param fTS TS object of the timeseries that you want to composite
+#' #' @param binvec A vector of bin edges for binning
+#' #' @param duration The length of time used to create the standardization interval
+#' #' @param searchRange An age range from which duration is sampled within
+#' #' @param spread An option to spread values over adjacent empty years (if TRUE, spreadPaleoData() is used by binFun)
+#' #' @param gaussianizeInput Optionally gaussianize input before compositing
+#' #' @param alignInterpDirection Optionally invert timeseries with negative interpretation_direction
+#' #' @param ... parameters to pass to stanFun
+#' #'
+#' #' @return a list. The main composite is in the list$composite matrix (needs a better definition here) TODO
+#' #' @export
+#' #'
+#' compositeDCC <- function(fTS, binvec, duration=3000, searchRange=c(0,7000),spread=TRUE,gaussianizeInput=FALSE, alignInterpDirection=TRUE,...){
+#'   results <- compositeEnsembles(fTS,
+#'                                 binvec,
+#'                                 stanFun     = standardizeMeanIteratively,
+#'                                 duration    = duration,
+#'                                 searchRange = searchRange,
+#'                                 spread            = spread,
+#'                                 gaussianizeInput  = gaussianizeInput,
+#'                                 alignInterpDirection = alignInterpDirection,
+#'                                 ...
+#'                                 )
+#'   return(results)
+#' }
 #'
-#' @param fTS TS object of the timeseries that you want to composite
-#' @param binvec A vector of bin edges for binning
-#' @param duration The length of time used to create the standardization interval
-#' @param searchRange An age range from which duration is sampled within
-#' @param spread An option to spread values over adjacent empty years (if TRUE, spreadPaleoData() is used by binFun)
-#' @param gaussianizeInput Optionally gaussianize input before compositing
-#' @param alignInterpDirection Optionally invert timeseries with negative interpretation_direction
-#' @param ... parameters to pass to stanFun
+#' compositeGAM <- function(GAM){
+#'   print('This method is closely related to SCC, but instead of computing the mean of the records within every 100-year interval, it fits a generalized additive model (GAM) through the ensemble. ')
+#' }
 #'
-#' @return a list. The main composite is in the list$composite matrix (needs a better definition here) TODO
-#' @export
+#' compositeCPS <- function(CPS){
+#'   print('This method is closely related to SCC, but instead of computing the mean of the records within every 100-year interval, it fits a generalized additive model (GAM) through the ensemble. ')
+#' }
 #'
-compositeDCC <- function(fTS, binvec, duration=3000, searchRange=c(0,7000),spread=TRUE,gaussianizeInput=FALSE, alignInterpDirection=TRUE,...){
-  results <- compositeEnsembles(fTS,
-                                binvec,
-                                stanFun     = standardizeMeanIteratively,
-                                duration    = duration,
-                                searchRange = searchRange,
-                                spread            = spread,
-                                gaussianizeInput  = gaussianizeInput,
-                                alignInterpDirection = alignInterpDirection,
-                                ...
-                                )
-  return(results)
-}
-
-compositeGAM <- function(GAM){
-  print('This method is closely related to SCC, but instead of computing the mean of the records within every 100-year interval, it fits a generalized additive model (GAM) through the ensemble. ')
-}
-
-compositeCPS <- function(CPS){
-  print('This method is closely related to SCC, but instead of computing the mean of the records within every 100-year interval, it fits a generalized additive model (GAM) through the ensemble. ')
-}
-
-compositePAI <- function(PAI){
-  print('This method is closely related to SCC, but instead of computing the mean of the records within every 100-year interval, it fits a generalized additive model (GAM) through the ensemble. ')
-}
+#' compositePAI <- function(PAI){
+#'   print('This method is closely related to SCC, but instead of computing the mean of the records within every 100-year interval, it fits a generalized additive model (GAM) through the ensemble. ')
+#' }
 # library(sf)
 # library(dplyr)
 # library(ggplot2)

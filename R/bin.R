@@ -1,9 +1,15 @@
-#' remove consecutive duplicates
+#' removeConsecutiveDuplicates
 #'
-#' @param spreadValues a vector of values
+#' Remove consecutive duplicates within a time series.
 #'
+#' @param spreadValues a vector of binned paleoData_values
 #' @return a matrix vector
 #' @export
+#'
+#' @examples
+#' removeConsecutiveDuplicates(c(1, 1, 2, 3, 3, 3, 4, 4, 5, 5))
+#'
+#'
 removeConsecutiveDuplicates <- function(spreadValues){
   spreadValues <- as.matrix(spreadValues)
   uv <- unique(spreadValues)
@@ -15,171 +21,113 @@ removeConsecutiveDuplicates <- function(spreadValues){
       tra <- c(tra,ind[tr])
     }
   }
-
-
+  #
   if(length(tra) > 0){
     out <- spreadValues[-tra]
   }else{
     out <- spreadValues
   }
   return(out)
-
-
 }
 
 
 
-
 #' spreadPaleoData
-#' @description A function to interpolate paleoData_values to a new vector using a nearest neighbor interpolation
+#' @description A function to interpolate paleoData_values to a new vector using a nearest neighbor interpolation.
 #'
 #' @param age    age vector for original timeseries
 #' @param value  paleoData vector to spread
-#' @param newAge new age vector to spread over
-#' @param spreadBy if newAge is not supplied, what is the desired resolution of spread data.
-#' @param maxGap a limit to how many years a value can be interpolated across (given in years)
-#' @param maxPct a limit to how many years a value can be interpolated across (given in percentage of the max)
-#' @param minAge minimum age value for output age vector
+#' @param newAge new age vector to spread over. If NA, this will be estimated using seq(min(age), max(age), spreadBy)
+#' @param spreadBy if newAge is not supplied, what is the desired resolution of the spread values? If NA, the minimum age gap divided by 5 will be used
+#' @param spreadMax a limit to how many years a value can be interpolated across (given in years). If NA, no limit is imposed.
+#' @param spreadMaxPct a limit to how many years a value can be interpolated across (given in the quantile ranking of age gaps (0.5=the median age gap). A floor of 1 year is imposed). If NA, no limit is imposed. Superseded by maxGap
+#' @param minAge minimum age value for output age vector. Default is -75 cal yr BP (2025 CE)
+#' @param maxAge maximum age value for output age vector. If NA, this will be the max(age) plus half the gap between the two oldest ages
+#'
+#' @importFrom magrittr %>%
 #'
 #' @return list of length=2 (spreadAge and spreadVal numeric vectors)
 #' @export
 spreadPaleoData <- function(age,
                             value,
                             newAge = NA,
-                            spreadBy,
-                            maxGap = NA,
-                            maxPct = 0.75,
-                            minAge = -69){
+                            spreadBy = NA,
+                            spreadMax = NA,
+                            spreadMaxPct = NA,
+                            minAge = -75,
+                            maxAge = NA){
 
-  if(length(age)==0){
-    #what's happening
-    return(list(spreadAge = age,spreadVal = value))
-  }
-
+  #Check to make sure the input ages look ok
+  if(length(age)==0){return(list(spreadAge = age,spreadVal = value))} #what's happening
   #remove nonfinite ages
   good <- which(is.finite(age))
-  if(length(good) < 2){
-    return(list(spreadAge = matrix(NA,ncol = length(age)),spreadVal = matrix(NA,ncol = length(age))))
-  }
-  age <- age[good]
-  value <- value[good]
+  if(length(good) < 2){return(list(spreadAge = matrix(NA,ncol = length(age)),spreadVal = matrix(NA,ncol = length(age))))}
 
-
-  hasNas <- FALSE
-  # #it doesn't handle NAs appropriately, so lets fix that
-  # if(any(is.na(value))){
-  #   hasNas <- TRUE
-  #   value[is.na(value)] <- -999999
-  # }
-
-  #spread and interpolate
-  if(all(is.na(newAge))){
-    newAge <- seq(ceiling(min(age)),floor(max(age)),by = spreadBy)
-  }else{
-    spreadBy <- stats::median(newAge,na.rm = TRUE)
-  }
-
+  #Remove any NA ages
+  age   <- as.vector(age[good])
+  value <- as.vector(value[good])
   #Sort ages consecutively
-  age <- as.vector(age)
-  as <- sort(age,index.return = TRUE)
-  age <- age[as$ix]
-  value <- as.vector(value)
-  value <- value[as$ix]
+  ageidx <- order(age)
+  age   <- age[ageidx]
+  value <- value[ageidx]
+  #if any duplicate ages, remove (calc average of values for same age)
+  if (length(age) != (length(unique(age)))){
+    ages <- sort(unique(age))
+    vals <- c()
+    for (a in ages){vals <- c(vals,mean(value[ages==a],na.rm=T))}
+    value <- vals
+    age <- ages
+  }
 
+  #find max age to cutoff. This is an issue if the newAge vector is too long for the record
+  maxAge <- max(age)+diff(age)[length(diff(age))]/2
+
+  #get vector to spread data to
+  if(any(is.na(newAge))){
+    # if NA, use the minimum age gap divided by 5 to get a spreadBy value
+    if (is.na(spreadBy)){spreadBy <- ceiling(min(abs(diff(age))/5))}
+    # if NA, create a newAge which considered the age range of the proxy record
+    # and adds additional buffer based on the resolution at either end
+    newAge <- seq(ceiling(min(age)-diff(age)[1]/2),
+                  floor(maxAge),
+                  by = spreadBy)
+  }else{
+    spreadBy <- min(diff(sort(newAge)))
+  }
+
+  #Extend data as needed
   if(min(age) > min(newAge)){# we need to extend age
     age <- c(min(newAge),age)
     value <- c(value[1],value)
   }
-
   if(max(age) < max(newAge)){# we need to extend age
     age <- c(age,max(newAge))
     value <- c(value,value[length(value)])
   }
 
-  newVals <- pracma::interp1(as.vector(age),as.vector(value),xi = newAge,method = "nearest")
-
-  # if(hasNas){
-  #   newVals[which(newVals == -999999)] <- NA
-  # }
-
-
-  #add on to the beginning
-  nv1 <- which(newVals == value[1])
-  if(any(diff(nv1) != 1)){
-    nv1 <- nv1[1:(min(which(diff(nv1) != 1)))]
-  }
-
-
-  f <- min(newAge)-min(c(0,length(nv1)-1))*spreadBy
-  t <- min(newAge)-spreadBy
-
-  if(f < t){
-  begAge <- seq(from = f,to = t,by = spreadBy)
-  begVal <- rep(newVals[1],times = length(begAge))
-  }else{
-    begAge <- c()
-    begVal <- c()
-  }
-
-  #add on to the end
-  end <- length(newAge)
-  nv2 <- which(newVals == value[length(value)])
-  if(any(diff(nv2) != 1)){
-    nv2 <- nv2[max(which(diff(nv2) != 1)):length(nv2)]
-  }
-
-
-  f <- max(newAge)+spreadBy
-  t <- max(newAge)+max(c(0,length(nv2)-1))*spreadBy
-  if(f < t){
-    endAge <- seq(from = f,to = t,by = spreadBy)
-    endVal <- rep(newVals[length(newVals)],times = length(endAge))
-  }else{
-    endAge <- c()
-    endVal <- c()
-  }
-
-
-
-  #append them
-  newAgeOut <- c(begAge,newAge,endAge)
-  newValsOut <- c(begVal,newVals,endVal)
-
-
-  #distance to nearest
-  d2n <- purrr::map_dbl(newAgeOut,function(x) min(abs(x-age)))
-
-  #get local d2n maxima
-  locmaxi <- which(diff(sign(diff(d2n)))==-2)+1
-  if (length(locmaxi)>0){
-    locmax <- pracma::interp1(x = as.vector(c(newAgeOut[1],newAgeOut[locmaxi],newAgeOut[length(newAgeOut)])),
-                              as.vector(c(d2n[locmaxi[1]],d2n[locmaxi],d2n[locmaxi[length(locmaxi)]]))
-                              ,xi = newAgeOut,
-                              method = "nearest")
-    lmpct <- d2n/locmax
-  } else{
-    lmpct <-0.1
-  }
-
+  #One-dimensional interpolation of points.
+  newVals <- pracma::interp1(as.vector(age),as.vector(value),xi = newAge,method = 'nearest')
 
   #remove values that exceed maxGap
-  if(!is.na(maxGap)){
-    newValsOut[d2n > maxGap] <- NA
+  if (!is.na(spreadMaxPct) & is.na(spreadMax)){
+    spreadMax <- stats::quantile(diff(sort(age)),spreadMaxPct)
+  }
+  if(!is.na(spreadMax)){
+    #distance to nearest
+    d2n <- purrr::map_dbl(newAge,function(x) min(abs(x-age)))
+    #assign NA where gap is too large
+    newVals[d2n > spreadMax] <- NA
   }
 
-  if(!is.na(maxPct)){
-    newValsOut[lmpct > maxPct] <- NA
+  #remove values that are too young or old
+  good <- dplyr::between(newAge,minAge,maxAge)
+  if(sum(!good) > 0){
+    newAge[!good] <- NA
+    newVals[!good] <- NA
   }
 
-  #remove values that are too young
-  ty <- which(newAgeOut < minAge)
-  if(length(ty) > 0){
-    newAgeOut <- newAgeOut[-ty]
-    newValsOut <- newValsOut[-ty]
-  }
-
-
-  return(list(spreadAge = newAgeOut,spreadVal = newValsOut))
+  #return
+  return(list(spreadAge = newAge,spreadVal = newVals))
 
 }
 
@@ -190,11 +138,10 @@ spreadPaleoData <- function(age,
 #' @param binvec vector of time boundaries over which to bin
 #' @param ageVar specify the name the time variable (typically 'age' or 'year')
 #' @param spread should values be interpolated between bins? (TRUE/FALSE)
-#' @param spreadBy what is the desired resolution of spread data (passed to spreadPaleoData())
-#' @param spreadMax a limit to how many years  (given in years) a value can be interpolated across (passed to spreadPaleoData())
 #' @param gaussianizeInput Force values to gaussian distribution before analysis (TRUE/FALSE)
 #' @param alignInterpDirection multiply values by -1 if scope_interpDirection == negative (TRUE/FALSE)
 #' @param scope the scope of the project (typically "climate" (default) or "isotope")
+#' @inheritParams spreadPaleoData
 #'
 #' @return numeric vector of values of equal length to binvec
 #' @export
@@ -204,21 +151,20 @@ simpleBinTs <- function(ts,
                         ageVar = "age",
                         spread = TRUE,
                         spreadBy = abs(mean(diff(binvec)))/10,
-                        spreadMax = as.numeric(abs(stats::quantile(abs(diff(ts[[ageVar]])),probs = .75,na.rm = TRUE))),
+                        spreadMax = as.numeric(abs(stats::quantile(abs(diff(sort(ts[[ageVar]]))),probs = .75,na.rm = TRUE))),
                         gaussianizeInput= FALSE,
                         alignInterpDirection = TRUE,
-                        scope = "climate"){
+                        scope = "climate")
+  {
+  #Spread data if TRUE (default = TRUE)
   if(spread){#estimate for contiguous sampling with a nearest neighbor interpolation
+    sp <- spreadPaleoData(age = ts[[ageVar]],
+                          value = ts$paleoData_values,
+                          spreadBy = spreadBy,
+                          spreadMax = spreadMax)
 
-  sp <- spreadPaleoData(age = ts[[ageVar]],
-                        value = ts$paleoData_values,
-                        spreadBy = spreadBy,
-                        maxPct = NA,
-                        maxGap = spreadMax)
-  age <- sp$spreadAge
-  vals <- sp$spreadVal
-
-
+    age <- sp$spreadAge
+    vals <- sp$spreadVal
   }else{#use without any spreading
     age <- ts[[ageVar]]
     vals <-ts$paleoData_values
@@ -234,42 +180,40 @@ simpleBinTs <- function(ts,
     #check for direction
     din <- names(ts)[stringr::str_detect("_interpDirection",string = names(ts))]
     di <- unlist(magrittr::extract(ts,din))
-
-    sin <- names(ts)[stringr::str_detect("_scope",string = names(ts))]
+    #check for scope
+    sin <- names(ts)[stringr::str_detect("scope",string = names(ts))]
     si <- unlist(magrittr::extract(ts,sin))
-
-    if(!is.na(scope)){
-      di <- di[grepl(pattern = scope,x = si)]
-    }
-
+    if(!is.na(scope)){di <- di[grepl(pattern = scope,x = si)]}
+    #If negative, multiply by -1
     if(length(di)>0){
-      if(all(grepl(di,pattern = "negative",ignore.case = TRUE))){
-        vals <- vals * -1
+      #check for either negative/positive or -1/1
+      if(is.character(di)){
+        if(grepl(pattern = "neg", di[1], ignore.case = TRUE)){
+          vals <- vals * -1
+        }
+      }else{
+        if(di[1]<0){
+          vals <- vals * -1
+        }
       }
     }
   }
 
-  bd <- geoChronR::bin(age,vals,bin.vec = binvec)[,2]
-  return(bd)
+  #bin
+  binnedVals <- geoChronR::bin(age,vals,bin.vec = binvec)[,2]
+
+  return(binnedVals)
 }
 
 
 
 #' sampleEnsembleThenBinTs
 #'
-#' @param ts a lipd_ts object
-#' @param binvec vector of time boundaries over which to bin
-#' @param ageVar specify the name the time variable (typically 'age' or 'year')
+#' @inheritParams simpleBinTs
 #' @param uncVar specify the name the uncertainty variable
 #' @param defaultUnc a uncertainty to use if uncVar is NULL (default = 1.5 paleoData_units)
 #' @param ar Autocorrelation coefficient to use for modelling uncertainty on paleoData, what fraction of the uncertainties are autocorrelated? (default = sqrt(0.5); or 50 percent autocorrelated uncertainty)
-#' @param bamModel BAM Model parameters to use if simulating time uncertainty (default = list(ns = 1, name = "bernoulli", param = 0.05))
-#' @param spread should values be interpolated between bins? (TRUE/FALSE)
-#' @param spreadBy what is the desired resolution of spread data (passed to spreadPaleoData())
-#' @param spreadMax a limit to how many years  (given in years) a value can be interpolated across (passed to spreadPaleoData())
-#' @param gaussianizeInput Force values to gaussian distribution before analysis (TRUE/FALSE)
-#' @param alignInterpDirection multiply values by -1 if scope_interpDirection == negative (TRUE/FALSE)
-#' @param scope the scope of the project (typically "climate" (default) or "isotope")
+#' @param bamModel a list that describes the model to use in BAM (default = list(ns = 1, name = "bernoulli", param = 0.05))
 #'
 #' @return  numeric vector of values of equal length to binvec
 #' @export
@@ -286,6 +230,7 @@ sampleEnsembleThenBinTs <- function(ts,
                                     gaussianizeInput = FALSE,
                                     alignInterpDirection = TRUE,
                                     scope = "climate"){
+
   #sample from ageEnsemble
   if(is.null(ts[[ageVar]])){
     stop(print(paste0(ts$dataSetName,": has a null for its age variable")))
@@ -295,7 +240,6 @@ sampleEnsembleThenBinTs <- function(ts,
   }else{#simulate
     thisAge <- geoChronR::simulateBam(matrix(1,nrow = length(ts[[ageVar]])),as.matrix(ts[[ageVar]]),model = bamModel,ageEnsOut = TRUE)$ageEns
   }
-
 
   #Now sample from paleoData
   if(NCOL(ts$paleoData_values) > 1){#draw from ensemble
@@ -310,52 +254,16 @@ sampleEnsembleThenBinTs <- function(ts,
   }
 
   #check
-  if(length(thisPdv) != length(thisAge)){
-    stop("Paleodata and ages must have the same number of observations.")
-  }
+  if(length(thisPdv) != length(thisAge)){stop("Paleodata and ages must have the same number of observations.")}
 
-  #gaussianize?
-  if(gaussianizeInput){
-    thisPdv <- geoChronR::gaussianize(thisPdv)
-  }
+  #bin values using simpleBinTs()
+  binnedVals <- simpleBinTs(ts, binvec, ageVar = ageVar, spread = spread,
+                            spreadBy = spreadBy,
+                            spreadMax = spreadMax,
+                            gaussianizeInput = gaussianizeInput,
+                            alignInterpDirection = alignInterpDirection,
+                            scope = scope)
 
-
-  #spread?
-  if(spread){#estimate for contiguous sampling with a nearest neighbor interpolation
-    sp <- spreadPaleoData(age = ts[[ageVar]],
-                          value = thisPdv,
-                          spreadBy = spreadBy,
-                          maxPct = NA,
-                          maxGap = spreadMax)
-    age <- sp$spreadAge
-    vals <- sp$spreadVal
-
-  }else{#use without any spreading
-    age <- thisAge
-    vals <-thisPdv
-  }
-
-
-  if(alignInterpDirection){
-    #check for direction
-    din <- names(ts)[stringr::str_detect("_interpDirection",string = names(ts))]
-    di <- unlist(magrittr::extract(ts,din))
-
-    sin <- names(ts)[stringr::str_detect("_scope",string = names(ts))]
-    si <- unlist(magrittr::extract(ts,sin))
-
-    if(!is.na(scope)){
-    di <- di[grepl(pattern = scope,x = si)]
-    }
-
-    if(length(di)>0){
-      if(all(grepl(di,pattern = "negative",ignore.case = TRUE))){
-        vals <- vals * -1
-      }
-    }
-  }
-
-  bd <- geoChronR::bin(time = age,values = vals,bin.vec = binvec)[,2]
-  return(bd)
+  return(binnedVals)
 
 }

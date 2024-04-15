@@ -10,8 +10,8 @@ simpleBinTs(
   ageVar = "age",
   spread = TRUE,
   spreadBy = abs(mean(diff(binvec)))/10,
-  spreadMax = as.numeric(abs(stats::quantile(abs(diff(ts[[ageVar]])), probs = 0.75, na.rm
-    = TRUE))),
+  spreadMax = as.numeric(abs(stats::quantile(abs(diff(sort(ts[[ageVar]]))), probs = 0.75,
+    na.rm = TRUE))),
   gaussianizeInput = FALSE,
   alignInterpDirection = TRUE,
   scope = "climate"
@@ -26,9 +26,9 @@ simpleBinTs(
 
 \item{spread}{should values be interpolated between bins? (TRUE/FALSE)}
 
-\item{spreadBy}{what is the desired resolution of spread data (passed to spreadPaleoData())}
+\item{spreadBy}{if newAge is not supplied, what is the desired resolution of the spread values? If NA, the minimum age gap divided by 5 will be used}
 
-\item{spreadMax}{a limit to how many years  (given in years) a value can be interpolated across (passed to spreadPaleoData())}
+\item{spreadMax}{a limit to how many years a value can be interpolated across (given in years). If NA, no limit is imposed.}
 
 \item{gaussianizeInput}{Force values to gaussian distribution before analysis (TRUE/FALSE)}
 

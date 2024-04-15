@@ -6,47 +6,40 @@
 #' @param minN minimum number length of de within the interval to calculate
 #' @param normalizeVariance Should the pdm be scaled to a uniform mean (FALSE) or variance and mean (TRUE) (default = TRUE)
 #'
+#'
 #' @return a matrix of standardized values
 #' @export
 standardizeOverInterval <- function(ages,pdm,interval,minN = 8,normalizeVariance = TRUE){
 
   #check the data
-  if(length(ages)!=nrow(pdm)){
-    stop("the ages must match the rows in the paleoData matrix")
-  }
-
-  #get the interval
-  iStart <- min(interval)
-  iEnd <- max(interval)
+  if(length(ages)!=nrow(pdm)){stop("the ages must match the rows in the paleoData matrix")}
 
   #check which cols have enough data in
-  wa <- which(ages>=iStart & ages<iEnd)
-  if(sum(is.finite(ages[wa])))
+  wa <- which(ages>=min(interval) & ages<max(interval))
+  if(sum(is.finite(ages[wa])) == 0){
+    warning("binvec ages are outside of standarization interval")
+    pdm[,] <- NA
+    return(pdm)
+  }
 
   #subset the matrix by the interval
-
-
   spdm <- pdm[wa,]
+
+  #check which cols have enough data in the window (and assing as NA if )
+  ni <- apply(spdm,2,function(x) sum(is.finite(removeConsecutiveDuplicates(x))))
+  pdm[,which(ni<minN)] <- NA
+  spdm[,which(ni<minN)] <- NA
+
+  #Get mean and standard deviation for interval
   sm <- apply(spdm,2,mean,na.rm = TRUE)
   ss <- apply(spdm,2,stats::sd,na.rm = TRUE)
 
-
-  #check which cols have enough data in the window
-
-  ni <- apply(spdm,2,function(x) sum(is.finite(removeConsecutiveDuplicates(x))))
-
-  badc <- which(ni<minN)
-
- pdm[,badc] <- NA
- spdm[,badc] <- NA
-
   #scale the matrix
   if(normalizeVariance){
-    scaledPdm <- scale(pdm,center = sm,scale = ss)
+    scaledPdm <- base::scale(pdm,center = sm,scale = ss)
   }else{
-    scaledPdm <- scale(pdm,center = sm,scale = FALSE)
+    scaledPdm <- base::scale(pdm,center = sm,scale = FALSE)
   }
-
 
   #return it
   return(scaledPdm)
@@ -54,82 +47,87 @@ standardizeOverInterval <- function(ages,pdm,interval,minN = 8,normalizeVariance
 
 
 #' standardizeOverRandomInterval
-#'
-#' @param ages vector of ages. Each age corresponds to a row in pdm
-#' @param pdm matrix of binned paleoData values
-#' @param duration length of the interval to standardize the data within
-#' @param searchRange the age range to which the interval range will be sampled from
-#' @param normalizeVariance Should the pdm be scaled to a uniform mean (FALSE) or variance and mean (TRUE) (default = TRUE)
-#' @param minN minimum number length of de within the interval to calculate
+#' @param searchRange the age range within which to search for an interval
+#' @param duration length of the interval to standardize the data within. Must be <= than searchRange
+#' @inheritParams standardizeOverInterval
 #'
 #' @return a matrix of standardized values
 #' @export
-standardizeOverRandomInterval <- function(ages,pdm,duration,searchRange,normalizeVariance = TRUE,minN = 8){
+standardizeOverRandomInterval <- function(ages,pdm,duration,searchRange,minN = 8,normalizeVariance = TRUE){
 
-  #check the data
-  if(length(ages)!=nrow(pdm)){
-    stop("the ages must match the rows in the paleoData matrix")
-  }
+  if (duration>diff(searchRange)){stop("The duration must be <= the age range indicated by searchRange")}
 
-  scaledPdm <- matrix(NA,nrow = nrow(pdm),ncol = ncol(pdm))
-  for(i in 1:ncol(pdm)){
+  #Find a random searchRange to use
+  interval <- sample(seq(min(searchRange),max(searchRange)-duration,1),1)
+  interval <- c(interval,interval+duration)
 
-    #get the possible range
+  scaledPdm <- standardizeOverInterval(ages, pdm, interval=interval, minN = minN, normalizeVariance = normalizeVariance)
 
-    goodAges <-   ages[!is.na(pdm[,i])]
+  # Simplified this code (for better or worse) so that the same interval is chosen. If a record fails minN, so be it -Chris
 
-    pStart <- min(goodAges)
-    pEnd <- max(goodAges)
-
-    if(pEnd-pStart < duration){
-      warning(paste("column",i,"doesnt have the required duration"))
-      scaledPdm[,i] <- NA
-      next
-    }
-
-    startOptions <- goodAges[goodAges>= max(min(c(searchRange,pStart))) & goodAges<=min(c(max(searchRange),pEnd)-duration)]
-
-    if(length(startOptions) < 1){
-      warning(paste("column",i,"doesnt have an overlap between the required duration and the searchRange"))
-      scaledPdm[,i] <- NA
-      next
-    }
-
-    nVal <- 0
-    tt <- 0
-    posStarts <- sample(startOptions)
-    for(ps in posStarts){
-      iStart <- ps
-      iEnd <- iStart+duration
-
-      #check nvalues
-      pass <- which(ages>=iStart & ages<iEnd)
-      nVal <- sum(is.finite(removeConsecutiveDuplicates(pdm[pass,i])))
-
-      if(nVal >= minN){
-        break #move on
-      }
-    }
-
-    if(nVal < minN){
-      warning(paste("cant find an interval in column",i,"that has enough (at least minN (",minN,") observations"))
-      scaledPdm[,i] <- NA
-      next
-    }
-
-    #subset the matrix by the interval
-    spdm <- as.matrix(pdm[pass,i])
-
-    sm <- mean(spdm,na.rm = TRUE)
-    ss <- stats::sd(removeConsecutiveDuplicates(spdm),na.rm = TRUE)
-    #scale the matrix
-    if(normalizeVariance){
-      scaledPdm[,i] <- scale(pdm[,i],center = sm,scale = ss)
-    }else{
-      scaledPdm[,i] <- scale(pdm[,i],center = sm,scale = FALSE)
-    }
-
-  }
+  # #check the data
+  # if(length(ages)!=nrow(pdm)){
+  #   stop("the ages must match the rows in the paleoData matrix")
+  # }
+  # scaledPdm <- matrix(NA,nrow = nrow(pdm),ncol = ncol(pdm))
+  # for(i in 1:ncol(pdm)){
+  #
+  #   #get the possible range
+  #
+  #   goodAges <-   ages[!is.na(pdm[,i])]
+  #
+  #   pStart <- min(goodAges)
+  #   pEnd <- max(goodAges)
+  #
+  #   if(pEnd-pStart < duration){
+  #     warning(paste("column",i,"doesnt have the required duration"))
+  #     scaledPdm[,i] <- NA
+  #     next
+  #   }
+  #
+  #   startOptions <- goodAges[goodAges>= max(min(c(searchRange,pStart))) & goodAges<=min(c(max(searchRange),pEnd)-duration)]
+  #
+  #   if(length(startOptions) < 1){
+  #     warning(paste("column",i,"doesnt have an overlap between the required duration and the searchRange"))
+  #     scaledPdm[,i] <- NA
+  #     next
+  #   }
+  #
+  #   nVal <- 0
+  #   tt <- 0
+  #   posStarts <- sample(startOptions)
+  #   for(ps in posStarts){
+  #     iStart <- ps
+  #     iEnd <- iStart+duration
+  #
+  #     #check nvalues
+  #     pass <- which(ages>=iStart & ages<iEnd)
+  #     nVal <- sum(is.finite(removeConsecutiveDuplicates(pdm[pass,i])))
+  #
+  #     if(nVal >= minN){
+  #       break #move on
+  #     }
+  #   }
+  #
+  #   if(nVal < minN){
+  #     warning(paste("cant find an interval in column",i,"that has enough (at least minN (",minN,") observations"))
+  #     scaledPdm[,i] <- NA
+  #     next
+  #   }
+  #
+  #   #subset the matrix by the interval
+  #   spdm <- as.matrix(pdm[pass,i])
+  #
+  #   sm <- mean(spdm,na.rm = TRUE)
+  #   ss <- stats::sd(removeConsecutiveDuplicates(spdm),na.rm = TRUE)
+  #   #scale the matrix
+  #   if(normalizeVariance){
+  #     scaledPdm[,i] <- scale(pdm[,i],center = sm,scale = ss)
+  #   }else{
+  #     scaledPdm[,i] <- scale(pdm[,i],center = sm,scale = FALSE)
+  #   }
+  #
+  # }
 
   #return it
   return(scaledPdm)
@@ -139,7 +137,7 @@ standardizeOverRandomInterval <- function(ages,pdm,duration,searchRange,normaliz
 
 
 
-
+# I'm too confused by the below at the moment to try and change it -CH. Defaulting to revised standardizeOverRandomInterval()
 
 #' recordRMSE
 #'

@@ -33,13 +33,13 @@ sampleEnsembleThenBinTs(
 
 \item{ar}{Autocorrelation coefficient to use for modelling uncertainty on paleoData, what fraction of the uncertainties are autocorrelated? (default = sqrt(0.5); or 50 percent autocorrelated uncertainty)}
 
-\item{bamModel}{BAM Model parameters to use if simulating time uncertainty (default = list(ns = 1, name = "bernoulli", param = 0.05))}
+\item{bamModel}{a list that describes the model to use in BAM (default = list(ns = 1, name = "bernoulli", param = 0.05))}
 
 \item{spread}{should values be interpolated between bins? (TRUE/FALSE)}
 
-\item{spreadBy}{what is the desired resolution of spread data (passed to spreadPaleoData())}
+\item{spreadBy}{if newAge is not supplied, what is the desired resolution of the spread values? If NA, the minimum age gap divided by 5 will be used}
 
-\item{spreadMax}{a limit to how many years  (given in years) a value can be interpolated across (passed to spreadPaleoData())}
+\item{spreadMax}{a limit to how many years a value can be interpolated across (given in years). If NA, no limit is imposed.}
 
 \item{gaussianizeInput}{Force values to gaussian distribution before analysis (TRUE/FALSE)}
 

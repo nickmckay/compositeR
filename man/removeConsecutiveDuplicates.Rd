@@ -2,16 +2,21 @@
 % Please edit documentation in R/bin.R
 \name{removeConsecutiveDuplicates}
 \alias{removeConsecutiveDuplicates}
-\title{remove consecutive duplicates}
+\title{removeConsecutiveDuplicates}
 \usage{
 removeConsecutiveDuplicates(spreadValues)
 }
 \arguments{
-\item{spreadValues}{a vector of values}
+\item{spreadValues}{a vector of binned paleoData_values}
 }
 \value{
 a matrix vector
 }
 \description{
-remove consecutive duplicates
+Remove consecutive duplicates within a time series.
+}
+\examples{
+removeConsecutiveDuplicates(c(1, 1, 2, 3, 3, 3, 4, 4, 5, 5))
+
+
 }
