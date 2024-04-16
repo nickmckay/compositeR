@@ -17,20 +17,20 @@ library(dggridR)
 #     sf::st_cast("POLYGON")
 #   return(Poly_Coord_df)
 # }
-#set arctic circle to plot as panel boundary
-arcticCircle <- data.frame(id="A",lon=seq(-180,180), lat= rep(58,length(seq(-180,180))))%>%
-  st_as_sf(coords = c("lon", "lat"), crs = 4326) %>%
-  summarise((geometry = sf::st_combine(geometry))) %>%
-  st_cast("MULTILINESTRING")
-#get arctic polygons
-arctic <- defineRegion(58,90,-180,180)
-# polygonsArctic  <- sf::st_intersection(polygons,arctic)  %>%
-#   mutate(lon=st_coordinates(st_centroid(.))[,1]) %>%
-#   mutate(lat=st_coordinates(st_centroid(.))[,2]) %>%
-#   mutate(area_km2 = units::drop_units(st_area(.)/1000000)) #km^2
-#countries to plot
-countries <- st_as_sf(rworldmap::getMap("high"))
-countriesArctic <- sf::st_intersection(countries,arctic)
+# #set arctic circle to plot as panel boundary
+# arcticCircle <- data.frame(id="A",lon=seq(-180,180), lat= rep(58,length(seq(-180,180))))%>%
+#   st_as_sf(coords = c("lon", "lat"), crs = 4326) %>%
+#   summarise((geometry = sf::st_combine(geometry))) %>%
+#   st_cast("MULTILINESTRING")
+# #get arctic polygons
+# arctic <- defineRegion(58,90,-180,180)
+# # polygonsArctic  <- sf::st_intersection(polygons,arctic)  %>%
+# #   mutate(lon=st_coordinates(st_centroid(.))[,1]) %>%
+# #   mutate(lat=st_coordinates(st_centroid(.))[,2]) %>%
+# #   mutate(area_km2 = units::drop_units(st_area(.)/1000000)) #km^2
+# #countries to plot
+# countries <- st_as_sf(rworldmap::getMap("high"))
+# countriesArctic <- sf::st_intersection(countries,arctic)
 #ice sheet list (vector names correspond to age)
 
 
@@ -96,6 +96,9 @@ ensOut <- compositeEnsembles2(
 
 plot(ensOut)
 print(ensOut)
+
+
+for
 
 
 
