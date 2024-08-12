@@ -23,7 +23,7 @@ standardizeOverInterval <- function(ages,pdm,interval,minN = 8,normalizeVariance
   }
 
   #subset the matrix by the interval
-  spdm <- pdm[wa,]
+  spdm <- as.matrix(pdm[wa,])
 
   #check which cols have enough data in the window (and assing as NA if )
   ni <- apply(spdm,2,function(x) sum(is.finite(removeConsecutiveDuplicates(x))))

@@ -39,8 +39,10 @@ plot.paleoComposite <- function(x,...){
 plotComposite <- function(compositeList, ageUnits = 'yr BP',valUnits='standardized',title='composite proxy record', combine=TRUE,...){
   ar <- rev(range(compositeList$ages))
   #Plot
+  compositeEns <- compositeList$composite[,(apply(!is.na(compositeList$composite),2,sum)>2)]
+  if(NCOL(compositeEns)==0){stop('Too many NA. Check results')}
   ensRibbon <- geoChronR::plotTimeseriesEnsRibbons(X=list(values = compositeList$ages, units=ageUnits, variableName='age'),
-                                                     Y=list(values = compositeList$composite,units=valUnits, variableName='composite anomaly'),...)+
+                                                     Y=list(values = compositeEns,units=valUnits, variableName='composite anomaly'),...)+
       theme_bw()
   # Add x axis
   ensRibbon <- suppressMessages(ensRibbon +
@@ -53,7 +55,7 @@ plotComposite <- function(compositeList, ageUnits = 'yr BP',valUnits='standardiz
   #Plot Count
   bs = abs(stats::median(diff(compositeList$ages)))
   tsAvailability <- ggplot2::ggplot()+
-    geom_bar(stat="identity",aes(x=compositeList$ages,y=apply(compositeList$proxyUsed,1,sum)),
+    geom_bar(stat="identity",aes(x=compositeList$ages,y=apply(compositeList$proxyUsed>0,1,sum)),
              fill='lightgrey',color='darkgrey',width=bs)+
     scale_y_continuous(limits=c(0,ncol(compositeList$proxyUsed)*1.1),expand=c(0,0),name='count')+
     scale_x_reverse(limits=c(ar[1]+bs/2,ar[2]-bs/2),expand=c(0,0),name=paste0('age (',ageUnits,')')) + theme_bw()
@@ -115,6 +117,6 @@ printComposite <- function(compositeList){ #com params.to.print = c("cpt.fun","m
 
   #print
   for (m in messages){print(m)}
-  print(utils::head(new_df))
+  print(utils::head(new_df%>%filter(!is.na(median))))
   #print(new_df)
 }
