@@ -4,14 +4,37 @@
 \alias{spreadPaleoData}
 \title{spreadPaleoData}
 \usage{
-spreadPaleoData(age, value, spreadBy, maxGap, minAge = -69)
+spreadPaleoData(
+  age,
+  value,
+  newAge = NA,
+  spreadBy = NA,
+  spreadMax = NA,
+  spreadMaxPct = NA,
+  minAge = -75,
+  maxAge = NA
+)
 }
 \arguments{
-\item{minAge}{}
+\item{age}{age vector for original timeseries}
+
+\item{value}{paleoData vector to spread}
+
+\item{newAge}{new age vector to spread over. If NA, this will be estimated using seq(min(age), max(age), spreadBy)}
+
+\item{spreadBy}{if newAge is not supplied, what is the desired resolution of the spread values? If NA, the minimum age gap divided by 5 will be used}
+
+\item{spreadMax}{a limit to how many years a value can be interpolated across (given in years). If NA, no limit is imposed.}
+
+\item{spreadMaxPct}{a limit to how many years a value can be interpolated across (given in the quantile ranking of age gaps (0.5=the median age gap). A floor of 1 year is imposed). If NA, no limit is imposed. Superseded by maxGap}
+
+\item{minAge}{minimum age value for output age vector. Default is -75 cal yr BP (2025 CE)}
+
+\item{maxAge}{maximum age value for output age vector. If NA, this will be the max(age) plus half the gap between the two oldest ages}
 }
 \value{
-
+list of length=2 (spreadAge and spreadVal numeric vectors)
 }
 \description{
-spreadPaleoData
+A function to interpolate paleoData_values to a new vector using a nearest neighbor interpolation.
 }

@@ -63,7 +63,7 @@ binAges <- rowMeans(cbind(binvec[-1],binvec[-length(binvec)]))
 # nm2k <- map_dbl(compMatNick[l2k,],mean)
 # ns2k <- map_dbl(compMatNick[l2k,],sd)
 # cm2k <- map_dbl(compMatCody[l2k,],mean)
-# cs2k <- map_dbl(compMatCody[l2k,],sd)
+# cs2kyyu <- map_dbl(compMatCody[l2k,],sd)
 #
 # nickScaled <- scale(as.matrix(compMatNick),center = nm2k,scale = ns2k)
 # codyScaled <- scale(as.matrix(compMatCody),center = cm2k,scale = cs2k)

@@ -1,10 +1,37 @@
 Package: compositeR
-Title: What the Package Does (one line, title case)
+Title: A Package to Create Paleoclimate Composite Records
 Version: 0.1.0
-Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+Authors@R: c(
+	person("McKay", "Nick", email = "Nicholas.McKay@nau.edu", role = c("aut", "cre")),
+	person("Hancock", "Christopher", email = "clh624@nau.edu", role = c("aut"))
+	)
+Maintainer: Nick McKay <Nicholas.McKay@nau.edu>
+Description: A package designed to create composite proxy records from multiple LiPD files.
 Depends: R (>= 3.5.0)
-License: What license is it under?
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.3
+Imports: 
+    abind,
+    crayon,
+    dplyr,
+    egg,
+    geoChronR (>= 1.1.10),
+    ggplot2,
+    glue,
+    magrittr,
+    pracma,
+    progress,
+    purrr,
+    stats,
+    stringr
+Suggests: 
+    knitr,
+    lipdR (>= 0.5.0),
+    rmarkdown,
+    tidyr
+VignetteBuilder: knitr
+Remotes: 
+    nickmckay/lipdR,
+    nickmckay/geoChronR

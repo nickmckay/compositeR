@@ -22,7 +22,7 @@ compositeEnsembles(
 
 \item{binvec}{A vector of bin edges for binning}
 
-\item{spread}{An option to spread values over adjacent empty years (needs a better definition here)}
+\item{spread}{An option to spread values over adjacent empty years (if TRUE, spreadPaleoData() is used by binFun)}
 
 \item{stanFun}{Function to use for standardization}
 
@@ -32,10 +32,14 @@ compositeEnsembles(
 
 \item{alignInterpDirection}{Optionally invert timeseries with negative interpretation_direction}
 
+\item{scope}{interpretation_scope for alignInterpDirection (default = 'climate')}
+
 \item{binFun}{Function to use for binning}
+
+\item{...}{parameters to pass to stanFun}
 }
 \value{
-
+a list. The main composite is in the list$composite matrix (needs a better definition here) TODO
 }
 \description{
 Composite with uncertainty
