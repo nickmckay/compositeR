@@ -19,19 +19,20 @@ compositeEnsembles2(
   alignInterpDirection = TRUE,
   scope = "climate",
   binFun = sampleEnsembleThenBinTs,
+  verbose = TRUE,
   ...
 )
 }
 \arguments{
 \item{fTS}{TS list of the timeseries that you want to composite}
 
-\item{binvec}{vector of time boundaries over which to bin}
+\item{binvec}{A vector that describes the edges of the bins to bin to}
 
 \item{nens}{the number of ensembles to create}
 
 \item{stanFun}{function to use for standardization (either standardizeOverRandomInterval, standardizeMeanIteratively, or standardizeOverInterval)}
 
-\item{ageVar}{specify the name the time variable (typically 'age' or 'year')}
+\item{ageVar}{age variable to use}
 
 \item{uncVar}{uncertainty variable  \cr - Use a string to identify a fTS variable name or use a number to provide a uniform value to all records.  \cr - This is used if stanFun == sampleEnsembleThenBinTs but not for simpleBinTs.}
 
@@ -39,26 +40,21 @@ compositeEnsembles2(
 
 \item{samplePct}{the percent of records to used for each ensemble.  \cr - If length(fTS)*samplePct <= 3, this is ignored.  \cr - Default = 1 which means that 100 percent of records are used for each ensemble}
 
-\item{scale}{TODO}
+\item{scale}{scale each composite ensemble member to have a mean of zero and unit variance at the end of the compiting}
 
-\item{spread}{should values be interpolated between bins? (TRUE/FALSE)}
+\item{spread}{"Spread" data before binning to prevent aliasing of bins (default = TRUE)}
 
-\item{gaussianizeInput}{Force values to gaussian distribution before analysis (TRUE/FALSE)}
+\item{gaussianizeInput}{"Gaussianize" the data before compositing to avoid impacts of irregularly distributed data (default = TRUE)}
 
-\item{alignInterpDirection}{multiply values by -1 if scope_interpDirection == negative (TRUE/FALSE)}
+\item{alignInterpDirection}{align data by interpretation direction}
 
-\item{scope}{the scope of the project (typically "climate" (default) or "isotope")}
+\item{scope}{which scope of interpretation to use}
 
 \item{binFun}{function to use for binning (either sampleEnsembleThenBinTs or simpleBinTS)}
 
-\item{...}{
-  Arguments passed on to \code{\link[=standardizeOverRandomInterval]{standardizeOverRandomInterval}}
-  \describe{
-    \item{\code{searchRange}}{the age range within which to search for an interval}
-    \item{\code{duration}}{length of the interval to standardize the data within. Must be <= than searchRange}
-    \item{\code{minN}}{minimum number length of de within the interval to calculate}
-    \item{\code{normalizeVariance}}{Should the pdm be scaled to a uniform mean (FALSE) or variance and mean (TRUE) (default = TRUE)}
-  }}
+\item{verbose}{should a progress bar be printed?}
+
+\item{...}{additional options to pass to stanFun}
 }
 \value{
 a composite list class with three tibbles:

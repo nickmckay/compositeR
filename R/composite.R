@@ -52,17 +52,23 @@ compositeEnsembles <- function(fTS,
 #' create paleoclimate composite ensembles from a list of LiPD timeseries. A revised version of compositeEnsembles by Chris Hancock (2024)
 #'
 #' @import dplyr
+#'
 #' @param fTS TS list of the timeseries that you want to composite
+#' @param binvec A vector that describes the edges of the bins to bin to
 #' @param nens the number of ensembles to create
 #' @param stanFun function to use for standardization (either standardizeOverRandomInterval, standardizeMeanIteratively, or standardizeOverInterval)
 #' @param binFun function to use for binning (either sampleEnsembleThenBinTs or simpleBinTS)
 #' @param uncVar uncertainty variable  \cr - Use a string to identify a fTS variable name or use a number to provide a uniform value to all records.  \cr - This is used if stanFun == sampleEnsembleThenBinTs but not for simpleBinTs.
 #' @param weights weights for calculating the composite mean. \cr - For example, you may want to weight each record in a region relative to the number of total records from a single site.  \cr - Use a string to identify a fTS variable name, otherwise all values will be weighted equally.
 #' @param samplePct the percent of records to used for each ensemble.  \cr - If length(fTS)*samplePct <= 3, this is ignored.  \cr - Default = 1 which means that 100 percent of records are used for each ensemble
-#' @param scale TODO
+#' @param scale scale each composite ensemble member to have a mean of zero and unit variance at the end of the compiting
+#' @param ageVar age variable to use
+#' @param spread "Spread" data before binning to prevent aliasing of bins (default = TRUE)
+#' @param gaussianizeInput "Gaussianize" the data before compositing to avoid impacts of irregularly distributed data (default = TRUE)
+#' @param alignInterpDirection align data by interpretation direction
+#' @param scope which scope of interpretation to use
+#' @param ... additional options to pass to stanFun
 #' @param verbose should a progress bar be printed?
-#' @inheritParams sampleEnsembleThenBinTs
-#' @inheritDotParams standardizeOverRandomInterval duration searchRange minN normalizeVariance
 #'
 #' @return a composite list class with three tibbles:
 #' \cr (1) The composite [dims = length(binvec) x (nens + 1 for age column)]
@@ -122,7 +128,7 @@ compositeEnsembles2 <- function(fTS,
 
   # Bin and standardize the timeseries for each iteration  # #############################
   stanMatList <- list()
-  print("binning and aligning the data. This may take some time depending on the number of records (length(fTS)) and number of ensembles (nens)")
+  print(glue::glue("binning and aligning the data. This may take some time depending on the number of records (n = {length(fTS)}) and number of ensembles (n = {nens})"))
   if(verbose){pb <- progress::progress_bar$new(total = nens, format = "[:bar] :percent | ETA: :eta")}
   for (i in 1:nens){
     set.seed(i)
@@ -153,18 +159,28 @@ compositeEnsembles2 <- function(fTS,
     if(verbose){pb$tick()}
   }
 
-  #Scale
-  if (scale){warning('scale not implemented yet. no scaling applied')}
+
   #TODO: standardize(document)
 
   # Summarize
   stan_df <- as.data.frame(abind::abind(stanMatList,along=1))
   # Composite means (each column is a composite mean of proxies)
+
+  scaleNaRm <- function(x){
+    out <- (x - mean(x,na.rm = TRUE)) / sd(x,na.rm = TRUE)
+    return(out)
+  }
+
   compMat <- stan_df %>%
-    dplyr::transmute(age, iteration, mean = apply(dplyr::select(.,-c(age,iteration)),1,stats::weighted.mean, w=w, na.rm=T)) %>%
+    dplyr::transmute(age, iteration, mean = apply(dplyr::select(.,-c(age,iteration)),1,stats::weighted.mean,w = w, na.rm = TRUE)) %>%
     dplyr::group_by(age,iteration) %>%
     tidyr::pivot_wider(names_from = iteration, values_from = mean) %>%
     dplyr::rename_at(dplyr::vars(-age),~ paste0("comp", .))
+
+  if(scale){
+    compMat <- mutate(ungroup(compMat), across(starts_with("comp"),.fns = scaleNaRm))
+  }
+
   # Standardized proxy time series (each column is a proxy mean of iterations)
   proxyMat <- stan_df %>%
     dplyr::select(-iteration) %>%
