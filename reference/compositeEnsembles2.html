@@ -32,6 +32,9 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
+      <a href="../articles/Gridded_composites.html">Gridded_composites</a>
+    </li>
+    <li>
       <a href="../articles/Temp12k_IceCore.html">Temp12k_IceCore</a>
     </li>
     <li>
@@ -72,6 +75,7 @@
 <span>  alignInterpDirection <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  scope <span class="op">=</span> <span class="st">"climate"</span>,</span>
 <span>  binFun <span class="op">=</span> <span class="va">sampleEnsembleThenBinTs</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -85,7 +89,7 @@
 
 
 <dt id="arg-binvec">binvec<a class="anchor" aria-label="anchor" href="#arg-binvec"></a></dt>
-<dd><p>vector of time boundaries over which to bin</p></dd>
+<dd><p>A vector that describes the edges of the bins to bin to</p></dd>
 
 
 <dt id="arg-nens">nens<a class="anchor" aria-label="anchor" href="#arg-nens"></a></dt>
@@ -97,7 +101,7 @@
 
 
 <dt id="arg-agevar">ageVar<a class="anchor" aria-label="anchor" href="#arg-agevar"></a></dt>
-<dd><p>specify the name the time variable (typically 'age' or 'year')</p></dd>
+<dd><p>age variable to use</p></dd>
 
 
 <dt id="arg-uncvar">uncVar<a class="anchor" aria-label="anchor" href="#arg-uncvar"></a></dt>
@@ -113,44 +117,35 @@
 
 
 <dt id="arg-scale">scale<a class="anchor" aria-label="anchor" href="#arg-scale"></a></dt>
-<dd><p>TODO</p></dd>
+<dd><p>scale each composite ensemble member to have a mean of zero and unit variance at the end of the compiting</p></dd>
 
 
 <dt id="arg-spread">spread<a class="anchor" aria-label="anchor" href="#arg-spread"></a></dt>
-<dd><p>should values be interpolated between bins? (TRUE/FALSE)</p></dd>
+<dd><p>"Spread" data before binning to prevent aliasing of bins (default = TRUE)</p></dd>
 
 
 <dt id="arg-gaussianizeinput">gaussianizeInput<a class="anchor" aria-label="anchor" href="#arg-gaussianizeinput"></a></dt>
-<dd><p>Force values to gaussian distribution before analysis (TRUE/FALSE)</p></dd>
+<dd><p>"Gaussianize" the data before compositing to avoid impacts of irregularly distributed data (default = TRUE)</p></dd>
 
 
 <dt id="arg-aligninterpdirection">alignInterpDirection<a class="anchor" aria-label="anchor" href="#arg-aligninterpdirection"></a></dt>
-<dd><p>multiply values by -1 if scope_interpDirection == negative (TRUE/FALSE)</p></dd>
+<dd><p>align data by interpretation direction</p></dd>
 
 
 <dt id="arg-scope">scope<a class="anchor" aria-label="anchor" href="#arg-scope"></a></dt>
-<dd><p>the scope of the project (typically "climate" (default) or "isotope")</p></dd>
+<dd><p>which scope of interpretation to use</p></dd>
 
 
 <dt id="arg-binfun">binFun<a class="anchor" aria-label="anchor" href="#arg-binfun"></a></dt>
 <dd><p>function to use for binning (either sampleEnsembleThenBinTs or simpleBinTS)</p></dd>
 
 
+<dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
+<dd><p>should a progress bar be printed?</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Arguments passed on to <code><a href="standardizeOverRandomInterval.html">standardizeOverRandomInterval</a></code></p><dl><dt><code>searchRange</code></dt>
-<dd><p>the age range within which to search for an interval</p></dd>
-
-    <dt><code>duration</code></dt>
-<dd><p>length of the interval to standardize the data within. Must be &lt;= than searchRange</p></dd>
-
-    <dt><code>minN</code></dt>
-<dd><p>minimum number length of de within the interval to calculate</p></dd>
-
-    <dt><code>normalizeVariance</code></dt>
-<dd><p>Should the pdm be scaled to a uniform mean (FALSE) or variance and mean (TRUE) (default = TRUE)</p></dd>
-
-
-</dl></dd>
+<dd><p>additional options to pass to stanFun</p></dd>
 
 </dl></div>
     <div id="value">
