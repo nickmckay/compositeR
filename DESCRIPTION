@@ -1,6 +1,6 @@
 Package: compositeR
 Title: A Package to Create Paleoclimate Composite Records
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: c(
 	person("McKay", "Nick", email = "Nicholas.McKay@nau.edu", role = c("aut", "cre")),
 	person("Hancock", "Christopher", email = "clh624@nau.edu", role = c("aut"))
