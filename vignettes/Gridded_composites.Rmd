@@ -204,7 +204,7 @@ baseMap(toMap$lon,toMap$lat,f = .2) +
 
 Now can we animate it?
 
-```{r}
+```{r,fig.show='animate'}
 library(gganimate)
 
 bm <- baseMap(grid$lon,lat = grid$lat,f = .2)
@@ -219,4 +219,5 @@ animate(anim,fps = 4,nframes = length(unique(spatialMedians$year)))
   
 ```
 
+![](https://raw.githubusercontent.com/nickmckay/compositeR/master/preview.gif)
 
