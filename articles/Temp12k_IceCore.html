@@ -112,7 +112,6 @@ dataset</strong></p>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">lipdR</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">compositeR</span><span class="op">)</span> <span class="co">#devtools::load_all() #</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/nickmckay/GeoChronR" class="external-link">geoChronR</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="font-weight: bold;">Welcome to geoChronR version 1.1.14!</span></span></span>
 <span><span class="co">#General Packages</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a></span><span class="op">)</span></span>
@@ -141,7 +140,7 @@ records from the arctic for our demonstation.</li>
 <span><span class="va">fTS</span> <span class="op">&lt;-</span> <span class="va">Temp12k</span><span class="op">[</span><span class="va">idx</span><span class="op">]</span></span>
 <span><span class="co">#Map data to get a quick sense of what records we're using</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu">geoChronR</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/geoChronR/man/mapTs.html" class="external-link">mapTs</a></span><span class="op">(</span><span class="va">fTS</span>,color<span class="op">=</span><span class="st">'dataSetName'</span>,size<span class="op">=</span><span class="fl">5</span>,lat.range<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">55</span>,<span class="fl">85</span><span class="op">)</span>,lon.range<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">90</span>,<span class="op">-</span><span class="fl">20</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="Temp12k_IceCore_files/figure-html/unnamed-chunk-3-1.png" width="624"></p>
+<p><img src="Temp12k_IceCore_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" width="624"></p>
 <p><strong>Now let’s look at the timeseries data (this code chunk does
 not use any compositeR function)</strong></p>
 <ul>
@@ -162,7 +161,7 @@ but some are anomalies.</li>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Raw data"</span>, x <span class="op">=</span> <span class="st">"age (yr BP)"</span>, y <span class="op">=</span> <span class="st">"temperature (degC)"</span>, color <span class="op">=</span> <span class="st">"record"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_reverse</a></span><span class="op">(</span>limits<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">12000</span>,<span class="fl">0</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="Temp12k_IceCore_files/figure-html/unnamed-chunk-4-1.png" width="624"></p>
+<p><img src="Temp12k_IceCore_files/figure-html/unnamed-chunk-4-1.png" class="r-plt" width="624"></p>
 <p><strong>Now let’s start looking at the composite process. First we
 need to define a common time axis to convert all of the data
 to</strong></p>
@@ -199,6 +198,11 @@ ensemble using BAM.</li>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#Bin the values to a common timestep using simpleBinTs()</span></span>
 <span><span class="va">binMat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="fu">purrr</span><span class="fu">::</span><span class="fu"><a href="https://purrr.tidyverse.org/reference/map_dfr.html" class="external-link">map_dfc</a></span><span class="op">(</span><span class="va">fTS</span>,<span class="va">simpleBinTs</span>,<span class="va">binvec</span>,spread<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
 <span><span class="co">#Rearrange the data for plotting</span></span>
 <span><span class="va">fTS_df_binned</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  age <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">binAges</span>, times <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">binMat</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -211,7 +215,7 @@ ensemble using BAM.</li>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Binned data using simpleBinTs() at 100 year resolution"</span>, x <span class="op">=</span> <span class="st">"age (yr BP)"</span>, y <span class="op">=</span> <span class="st">"temperature (degC)"</span>, color <span class="op">=</span> <span class="st">"record"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_reverse</a></span><span class="op">(</span>limits<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">12000</span>,<span class="fl">0</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="Temp12k_IceCore_files/figure-html/unnamed-chunk-6-1.png" width="624"></p>
+<p><img src="Temp12k_IceCore_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" width="624"></p>
 <p><strong>The standardizeOverInterval() function scales the data as an
 anomaly relative to a defined interval</strong></p>
 <ul>
@@ -252,7 +256,7 @@ record to be included; default=8) so that all records are used.</li>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Binned &amp; standardized data"</span>, x <span class="op">=</span> <span class="st">"age (yr BP)"</span>, y <span class="op">=</span> <span class="st">"temperature (degC)"</span>, color <span class="op">=</span> <span class="st">"record"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_reverse</a></span><span class="op">(</span>limits<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">12000</span>,<span class="fl">0</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="Temp12k_IceCore_files/figure-html/unnamed-chunk-7-1.png" width="624"></p>
+<p><img src="Temp12k_IceCore_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" width="624"></p>
 <p><strong>Once the data are binned and standardized, use can calculate
 the composite mean</strong></p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
@@ -266,7 +270,7 @@ the composite mean</strong></p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Binned &amp; standardized data (black = composite mean)"</span>, x <span class="op">=</span> <span class="st">"age (yr BP)"</span>, y <span class="op">=</span> <span class="st">"temperature (degC)"</span>, color <span class="op">=</span> <span class="st">"record"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_reverse</a></span><span class="op">(</span>limits<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">12000</span>,<span class="fl">0</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="Temp12k_IceCore_files/figure-html/unnamed-chunk-8-1.png" width="624"></p>
+<p><img src="Temp12k_IceCore_files/figure-html/unnamed-chunk-8-1.png" class="r-plt" width="624"></p>
 <p><strong>All of the necessary parameters can be applied in one
 function using the compositeEnsembles() function which will produce the
 same results with less code</strong></p>
@@ -282,6 +286,11 @@ compositeEnsembles() function.</p>
 <span>                                normalizeVariance<span class="op">=</span><span class="cn">FALSE</span>,</span>
 <span>                                interval<span class="op">=</span><span class="va">interval</span>,</span>
 <span>                                minN<span class="op">=</span><span class="fl">5</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
 <span><span class="co">#This method can also be written as: composite &lt;- compositeSCC(fTS,binvec,binFun=simpleBinTs,minN=5)</span></span>
 <span><span class="co">#Plot the comparison between this wrapper function with composite mean</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">fTS_df_standardized</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">age</span>, y <span class="op">=</span> <span class="va">paleoData_values</span>, color <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">record</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -290,7 +299,7 @@ compositeEnsembles() function.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Comparison between compositeEnsembles() with step by step analysis"</span>, x <span class="op">=</span> <span class="st">"age (yr BP)"</span>, y <span class="op">=</span> <span class="st">"temperature (degC)"</span>, color <span class="op">=</span> <span class="st">"record"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_reverse</a></span><span class="op">(</span>limits<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">12000</span>,<span class="fl">0</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="Temp12k_IceCore_files/figure-html/unnamed-chunk-9-1.png" width="624"></p>
+<p><img src="Temp12k_IceCore_files/figure-html/unnamed-chunk-9-1.png" class="r-plt" width="624"></p>
 <p><strong>Now let’s create an ensemble using
 sampleEnsembleThenBinTs</strong></p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
@@ -308,6 +317,256 @@ sampleEnsembleThenBinTs</strong></p>
 <span>                                minN<span class="op">=</span><span class="fl">5</span></span>
 <span>                              <span class="op">)</span></span>
 <span><span class="co">#&gt; binning and aligning the data. This may take some time depending on the number of records (n = 5) and number of ensembles (n = 50)</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
+<span><span class="co">#&gt; [1] "here"</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/printComposite.html">printComposite</a></span><span class="op">(</span><span class="va">ensOut</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Composite created for ages: <span style="color: #00BB00;">0-12000</span> yr BP at <span style="color: #00BB00;">100</span> year resolution</span></span>
@@ -324,7 +583,7 @@ sampleEnsembleThenBinTs</strong></p>
 <span><span class="co">#&gt; 6 500 -1.7339     5</span></span>
 <span><span class="co">#TODO why is this plotting twice?</span></span>
 <span><span class="fu"><a href="../reference/plotComposite.html">plotComposite</a></span><span class="op">(</span><span class="va">ensOut</span><span class="op">)</span></span></code></pre></div>
-<p><img src="Temp12k_IceCore_files/figure-html/unnamed-chunk-10-1.png" width="624"><img src="Temp12k_IceCore_files/figure-html/unnamed-chunk-10-2.png" width="624"></p>
+<p><img src="Temp12k_IceCore_files/figure-html/unnamed-chunk-10-1.png" class="r-plt" width="624"><img src="Temp12k_IceCore_files/figure-html/unnamed-chunk-10-2.png" class="r-plt" width="624"></p>
 <p>devtools::build_rmd(“vignettes/Temp12k_IceCore.Rmd”)</p>
   </div>
 
@@ -343,7 +602,7 @@ sampleEnsembleThenBinTs</strong></p>
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
       </footer>
