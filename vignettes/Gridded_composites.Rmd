@@ -215,7 +215,7 @@ anim <- bm +
   labs(title = 'Year: {frame_time}', x = 'GDP per capita', y = 'life expectancy') +
   transition_time(year)
 
-animate(anim,fps = 4,nframes = length(unique(spatialMedians$year)))
+animate(anim,fps = 4,nframes = length(unique(spatialMedians$year)),height = 600,width = 800,res = 150)
   
 ```
 

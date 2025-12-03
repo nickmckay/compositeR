@@ -225,7 +225,7 @@ standardizeMeanIteratively <- function(ages,
   bad <- which(colSums(is.finite(start))==0 | colsds < 0.1 | filledBins < minN)
 
   if(length(bad) >= (NCOL(start)-2)){
-  stop("No good columns after standardization")
+    stop("No good columns after standardization")
   }
 
 

@@ -30,7 +30,14 @@ compositeEnsembles <- function(fTS,
   binAges <- rowMeans(cbind(binvec[-1],binvec[-length(binvec)]))
 
   #Align paleodata ages to common binstep
-  binMatR <- as.matrix(purrr::map_dfc(fTS,binFun,binvec,ageVar = ageVar,spread = spread,gaussianizeInput = gaussianizeInput,alignInterpDirection = alignInterpDirection, scope = scope))
+  binMatR <- as.matrix(purrr::map_dfc(fTS,
+                                      binFun,
+                                      binvec,
+                                      ageVar = ageVar,
+                                      spread = spread,
+                                      gaussianizeInput = gaussianizeInput,
+                                      alignInterpDirection = alignInterpDirection,
+                                      scope = scope))
   binMatR[is.nan(binMatR)] <- NA
 
   #Compute composites
