@@ -103,7 +103,7 @@ baseMap(grid$lon,grid$lat) +
 
 Let's filter the timeseries data down to one value per site. 
 
-```{r}
+```{r,warning=FALSE, message=FALSE,results=FALSE}
 toComp <- FDts |> 
   filter(interpretation1_variable == "T") #select only temperature sensitive timeseries
 
@@ -204,19 +204,20 @@ baseMap(toMap$lon,toMap$lat,f = .2) +
 
 Now can we animate it?
 
-```{r,fig.show='animate'}
+```{r,fig.show='animate',eval=FALSE}
 library(gganimate)
+library(gifski)
 
-bm <- baseMap(grid$lon,lat = grid$lat,f = .2)
-
-anim <- bm + 
-  geom_tile(data = spatialMedians,aes(x = lon, y = lat, fill = composite),alpha = .5,color = "black") +
-  scale_fill_distiller(palette = "RdBu",limit = max(abs(toMap$composite),na.rm = TRUE) * c(-1, 1)) +
-  labs(title = 'Year: {frame_time}', x = 'GDP per capita', y = 'life expectancy') +
+anim <- baseMap(spatialMedians$lon, lat = spatialMedians$lat, f = .2) +
+  geom_tile(data = spatialMedians, aes(x = lon, y = lat, fill = composite), alpha = .5, color = "black") +
+  scale_fill_distiller(palette = "RdBu", limit = max(abs(spatialMedians$composite), na.rm = TRUE) * c(-1, 1)) +
+  labs(title = 'Year: {round(frame_time)}') +
   transition_time(year)
 
-animate(anim,fps = 4,nframes = length(unique(spatialMedians$year)),height = 600,width = 800,res = 150)
-  
+#create an animation and save it
+fps <- 10
+animate(anim, fps = fps, duration = length(unique(spatialMedians$year))/fps, width = 800, height = 600,dpi = 150, renderer = gifski_renderer("../preview.gif"))
+
 ```
 
 ![](https://raw.githubusercontent.com/nickmckay/compositeR/master/preview.gif)

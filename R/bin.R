@@ -157,7 +157,6 @@ simpleBinTs <- function(ts,
                         scope = "climate"){
 
   #Check not ensemble
-  print("here")
 
   if(NCOL(ts[[ageVar]])>1){stop('ages must be given to simpleBinTs() as a 1d vector not a matrix. Use sampleEnsembleThenBinTs() or calculate the ensemble median')}
   if(NCOL(ts[['paleoData_values']])>1){stop('paleoDataValues must be given to simpleBinTs() as a 1d vector not a matrix. Use sampleEnsembleThenBinTs() or calculate the ensemble median')}
