@@ -7,10 +7,12 @@
 recordRMSE(td, palMat)
 }
 \arguments{
-\item{palMat}{}
+\item{td}{output of standardizeOverRandomInterval}
+
+\item{palMat}{matrix of paleoData values}
 }
 \value{
-
+list with RMSE and Bias vectores
 }
 \description{
 recordRMSE

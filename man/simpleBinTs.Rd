@@ -2,7 +2,7 @@
 % Please edit documentation in R/bin.R
 \name{simpleBinTs}
 \alias{simpleBinTs}
-\title{simple binning of a TS object instance}
+\title{simple binning of a lipd_ts object paleoData_values using a nearest neighbor approach}
 \usage{
 simpleBinTs(
   ts,
@@ -10,21 +10,35 @@ simpleBinTs(
   ageVar = "age",
   spread = TRUE,
   spreadBy = abs(mean(diff(binvec)))/10,
+  spreadMax = as.numeric(abs(stats::quantile(abs(diff(sort(ts[[ageVar]]))), probs = 0.75,
+    na.rm = TRUE))),
   gaussianizeInput = FALSE,
   alignInterpDirection = TRUE,
   scope = "climate"
 )
 }
 \arguments{
-\item{ts}{a ts object}
+\item{ts}{a lipd_ts object}
 
-\item{binvec}{vector of boundaries}
+\item{binvec}{vector of time boundaries over which to bin}
 
-\item{ageVar}{age variable}
+\item{ageVar}{specify the name the time variable (typically 'age' or 'year')}
+
+\item{spread}{should values be interpolated between bins? (TRUE/FALSE)}
+
+\item{spreadBy}{if newAge is not supplied, what is the desired resolution of the spread values? If NA, the minimum age gap divided by 5 will be used}
+
+\item{spreadMax}{a limit to how many years a value can be interpolated across (given in years). If NA, no limit is imposed.}
+
+\item{gaussianizeInput}{Force values to gaussian distribution before analysis (TRUE/FALSE)}
+
+\item{alignInterpDirection}{multiply values by -1 if scope_interpDirection == negative (TRUE/FALSE)}
+
+\item{scope}{the scope of the project (typically "climate" (default) or "isotope")}
 }
 \value{
-
+numeric vector of values of equal length to binvec
 }
 \description{
-simple binning of a TS object instance
+simple binning of a lipd_ts object paleoData_values using a nearest neighbor approach
 }

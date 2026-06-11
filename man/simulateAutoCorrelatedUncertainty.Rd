@@ -13,11 +13,19 @@ simulateAutoCorrelatedUncertainty(
 )
 }
 \arguments{
-\item{arima.order}{}
+\item{sd}{standard deviation of the output vector}
+
+\item{n}{length of output vector}
+
+\item{mean}{mean of the output vector}
+
+\item{ar}{Autocorrelation coefficient to use for modelling uncertainty, what fraction of the uncertainties are autocorrelated? (default = sqrt(0.5); or 50 percent autocorrelated uncertainty)}
+
+\item{arima.order}{Order to use for ARIMA model used in modelling uncertainty (default = c(1,0,0))}
 }
 \value{
-
+ts simulated from a from an ARIMA model with a defined mean and variance
 }
 \description{
-simulateAutoCorrelatedUncertainty
+generate synthetic timeseries
 }

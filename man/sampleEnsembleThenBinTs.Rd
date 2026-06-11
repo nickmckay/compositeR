@@ -14,16 +14,41 @@ sampleEnsembleThenBinTs(
   bamModel = list(ns = 1, name = "bernoulli", param = 0.05),
   spread = TRUE,
   spreadBy = abs(mean(diff(binvec)))/10,
+  spreadMax = as.numeric(stats::quantile(abs(diff(thisAge)), probs = 0.75, na.rm = TRUE)),
   gaussianizeInput = FALSE,
   alignInterpDirection = TRUE,
   scope = "climate"
 )
 }
 \arguments{
-\item{scope}{}
+\item{ts}{a lipd_ts object}
+
+\item{binvec}{vector of time boundaries over which to bin}
+
+\item{ageVar}{specify the name the time variable (typically 'age' or 'year')}
+
+\item{uncVar}{specify the name the uncertainty variable}
+
+\item{defaultUnc}{a uncertainty to use if uncVar is NULL (default = 1.5 paleoData_units)}
+
+\item{ar}{Autocorrelation coefficient to use for modelling uncertainty on paleoData, what fraction of the uncertainties are autocorrelated? (default = sqrt(0.5); or 50 percent autocorrelated uncertainty)}
+
+\item{bamModel}{a list that describes the model to use in BAM (default = list(ns = 1, name = "bernoulli", param = 0.05))}
+
+\item{spread}{should values be interpolated between bins? (TRUE/FALSE)}
+
+\item{spreadBy}{if newAge is not supplied, what is the desired resolution of the spread values? If NA, the minimum age gap divided by 5 will be used}
+
+\item{spreadMax}{a limit to how many years a value can be interpolated across (given in years). If NA, no limit is imposed.}
+
+\item{gaussianizeInput}{Force values to gaussian distribution before analysis (TRUE/FALSE)}
+
+\item{alignInterpDirection}{multiply values by -1 if scope_interpDirection == negative (TRUE/FALSE)}
+
+\item{scope}{the scope of the project (typically "climate" (default) or "isotope")}
 }
 \value{
-
+numeric vector of values of equal length to binvec
 }
 \description{
 sampleEnsembleThenBinTs
