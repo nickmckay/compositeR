@@ -22,7 +22,7 @@ plot.paleoComposite <- function(x,...){
 #' @import ggplot2
 #' @import dplyr
 #' @importFrom stats median
-#' @importFrom geoChronR plotTimeseriesEnsRibbons
+#' @importFrom lipdViz plotTimeseriesEnsRibbons
 #' @importFrom egg ggarrange
 #'
 #' @param compositeList The output of compositeEnsembles2()
@@ -30,7 +30,7 @@ plot.paleoComposite <- function(x,...){
 #' @param valUnits units for the composite (default = standardized)
 #' @param title a title for the combined plot (not used if combine == FALSE)
 #' @param combine output a combined figure using egg::ggarrange or provide a list of subplots
-#' @inheritDotParams geoChronR::plotTimeseriesEnsRibbons probs color.low color.high color.line color.vector line.width
+#' @inheritDotParams lipdViz::plotTimeseriesEnsRibbons probs color.low color.high color.line color.vector line.width
 #'
 #' @return a combined or list of gg plots
 #' @export
@@ -41,7 +41,7 @@ plotComposite <- function(compositeList, ageUnits = 'yr BP',valUnits='standardiz
   #Plot
   compositeEns <- compositeList$composite[,(apply(!is.na(compositeList$composite),2,sum)>2)]
   if(NCOL(compositeEns)==0){stop('Too many NA. Check results')}
-  ensRibbon <- geoChronR::plotTimeseriesEnsRibbons(X=list(values = compositeList$ages, units=ageUnits, variableName='age'),
+  ensRibbon <- lipdViz::plotTimeseriesEnsRibbons(X=list(values = compositeList$ages, units=ageUnits, variableName='age'),
                                                      Y=list(values = compositeEns,units=valUnits, variableName='composite anomaly'),...)+
       theme_bw()
   # Add x axis

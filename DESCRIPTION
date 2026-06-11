@@ -17,7 +17,8 @@ Imports:
     crayon,
     dplyr,
     egg,
-    geoChronR (>= 1.1.10),
+    ens (>= 0.2.0),
+    lipdViz,
     ggplot2,
     glue,
     magrittr,
@@ -32,8 +33,10 @@ Suggests:
     knitr,
     lipdR (>= 0.5.0),
     rmarkdown,
+    testthat,
     tidyr
 VignetteBuilder: knitr
-Remotes: 
+Remotes:
     nickmckay/lipdR,
-    nickmckay/geoChronR
+    nickmckay/ens,
+    nickmckay/lipdViz

@@ -1,10 +1,10 @@
 scaleComposite <- function(composite,binvec,scaleYears,scaleData,scaleWindow = NA,rescale = TRUE,scaleVariance = TRUE){
 
   if(NCOL(scaleData) > 1){#ensemble! :)
-    d <- geoChronR::bin(scaleYears,values = scaleData[,sample.int(ncol(scaleData),size = 1)],binvec = binvec)
+    d <- ens::bin(scaleYears,values = scaleData[,sample.int(ncol(scaleData),size = 1)],bin.vec = binvec)
 
   }else{ #nonsemble :(
-    d <- geoChronR::bin(scaleYears,values = scaleData,binvec = binvec)
+    d <- ens::bin(scaleYears,values = scaleData,bin.vec = binvec)
 
   }
 

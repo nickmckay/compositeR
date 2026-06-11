@@ -18,7 +18,8 @@ knitr::opts_chunk$set(
 ```{r setup}
 library(compositeR)
 library(lipdR)
-library(geoChronR)
+library(ens) # ensemble methods (split out of geoChronR)
+library(lipdViz) # visualization (split out of geoChronR)
 library(ggplot2)
 library(dplyr)
 library(tidyr)

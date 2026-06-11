@@ -27,5 +27,8 @@ simulateAutoCorrelatedUncertainty(
 ts simulated from a from an ARIMA model with a defined mean and variance
 }
 \description{
-generate synthetic timeseries
+Generate synthetic autocorrelated uncertainty. This is a thin
+wrapper around [ens::simulateAutoCorrelatedUncertainty()], preserved here
+because compositeR's historical argument order (sd first) differs from the
+ens version (n first).
 }
