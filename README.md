@@ -25,3 +25,22 @@ New:
 - Plotting and printing function
 - Added documentation
 - Simplified binning.R
+
+## Package family
+
+compositeR is part of a family of interoperable paleogeoscience packages. It
+builds on **[ens](https://github.com/nickmckay/ens)** for ensemble binning,
+gaussianization, and age-ensemble simulation, and on
+**[lipdViz](https://github.com/nickmckay/lipdViz)** for visualization.
+
+| Package | Role |
+|---|---|
+| [ens](https://github.com/nickmckay/ens) | Ensemble methods: binning, uncertainty propagation, correlation, regression, PCA, spectra |
+| [lipdViz](https://github.com/nickmckay/lipdViz) | Visualization of LiPD data and ensemble analyses |
+| [geoChronR](https://github.com/nickmckay/geoChronR-chronOnly) | Age modeling (Bacon, Bchron, OxCal, BAM) |
+| [actR](https://github.com/LinkedEarth/actR) | Abrupt-change detection |
+| **compositeR** | Paleoclimate record compositing (this package) |
+
+Compositing methods plug in through the `binFun` and `stanFun` arguments of
+`compositeEnsembles2()`, so custom binning or standardization strategies can be
+supplied without modifying the package.
