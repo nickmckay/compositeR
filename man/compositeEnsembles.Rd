@@ -44,3 +44,6 @@ a list. The main composite is in the list$composite matrix (needs a better defin
 \description{
 Composite with uncertainty
 }
+\seealso{
+[compositeEnsembles2()], the maintained ensemble-aware compositing function.
+}

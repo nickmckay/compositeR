@@ -84,6 +84,32 @@ print.paleoComposite <- function(x,...){
 }
 
 
+#' Summarize composite output
+#'
+#' @description Returns a one-row-per-bin summary data frame of a
+#' paleoComposite (the ensemble median and inter-quantile spread of the
+#' composite, and the number of proxies contributing at each bin), rather than
+#' printing to the console. Follows the family two-layer convention: the
+#' underlying object keeps its full ensemble matrices; this gives a compact
+#' tabular view.
+#'
+#' @param object a paleoComposite (output of compositeEnsembles2())
+#' @param probs quantiles of the composite ensemble to report (default 0.025, 0.5, 0.975)
+#' @param ... unused
+#' @importFrom stats quantile
+#' @return a data.frame with one row per age bin
+#' @export
+summary.paleoComposite <- function(object, probs = c(0.025, 0.5, 0.975), ...){
+  comp <- as.matrix(object$composite)
+  qs <- t(apply(comp, 1, stats::quantile, probs = probs, na.rm = TRUE))
+  colnames(qs) <- paste0("q", probs * 100)
+  data.frame(age = object$ages,
+             qs,
+             nProxy = round(apply(as.matrix(object$proxyUsed), 1, sum, na.rm = TRUE)),
+             check.names = FALSE)
+}
+
+
 #' Print compositeEnsembles2() output
 #' @importFrom stats median
 #' @importFrom glue glue

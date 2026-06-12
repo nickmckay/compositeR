@@ -78,3 +78,37 @@ test_that("compositeEnsembles2 DCC-style matches pre-migration reference", {
   expect_equal(out, ref$compositeDCC)
   expect_s3_class(out, "paleoComposite")
 })
+
+test_that("compositeEnsembles2 exposes correctly-spelled parameters element", {
+  set.seed(20)
+  out <- compositeEnsembles2(fTS, binvec, nens = 5,
+                             stanFun = standardizeOverInterval,
+                             interval = c(2000, 6000),
+                             binFun = simpleBinTs,
+                             verbose = FALSE)
+  expect_true("parameters" %in% names(out))
+  # misspelled alias retained for one deprecation cycle, identical content
+  expect_equal(out$paramaters, out$parameters)
+})
+
+test_that("summary.paleoComposite returns a per-bin quantile table", {
+  set.seed(20)
+  out <- compositeEnsembles2(fTS, binvec, nens = 5,
+                             stanFun = standardizeOverInterval,
+                             interval = c(2000, 6000),
+                             binFun = simpleBinTs,
+                             verbose = FALSE)
+  s <- summary(out)
+  expect_s3_class(s, "data.frame")
+  expect_equal(nrow(s), length(out$ages))
+  expect_true(all(c("age", "q50", "nProxy") %in% names(s)))
+})
+
+test_that("compositeEnsembles warns once that it is superseded", {
+  options(compositeR.compositeEnsembles.deprecated = NULL)
+  expect_warning(
+    compositeEnsembles(fTS, binvec, stanFun = standardizeOverInterval,
+                       binFun = simpleBinTs, interval = c(2000, 6000)),
+    "superseded by compositeEnsembles2"
+  )
+})

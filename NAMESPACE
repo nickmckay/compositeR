@@ -2,6 +2,7 @@
 
 S3method(plot,paleoComposite)
 S3method(print,paleoComposite)
+S3method(summary,paleoComposite)
 export(compositeEnsembles)
 export(compositeEnsembles2)
 export(new_composite)
@@ -24,3 +25,4 @@ importFrom(lipdViz,plotTimeseriesEnsRibbons)
 importFrom(magrittr,"%>%")
 importFrom(pracma,interp1)
 importFrom(stats,median)
+importFrom(stats,quantile)
