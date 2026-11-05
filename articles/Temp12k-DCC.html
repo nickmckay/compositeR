@@ -32,7 +32,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">compositeR</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0</span>
       </span>
     </div>
 
@@ -59,6 +59,9 @@
     </li>
   </ul>
 </li>
+<li>
+  <a href="../news/index.html">Changelog</a>
+</li>
       </ul>
 <ul class="nav navbar-nav navbar-right"></ul>
 </div>
@@ -83,7 +86,7 @@
 
     
     
-<p><code>#{r setup} library(compositeR)#devtools::install_github("nickmckay/compositeR") library(geoChronR) #devtools::install_github("nickmckay/geoChronR") library(lipdR)     #devtools::install_github("nickmckay/lipd-utilities",subdir = "R") library(purrr) library(magrittr) library(ggplot2) library(foreach) library(doParallel)</code></p>
+<p><code>#{r setup} library(compositeR)#devtools::install_github("nickmckay/compositeR") library(ens) # ensemble methods (split out of geoChronR) library(lipdViz) # visualization (split out of geoChronR) library(lipdR)     #devtools::install_github("nickmckay/lipd-utilities",subdir = "R") library(purrr) library(magrittr) library(ggplot2) library(foreach) library(doParallel)</code></p>
 <p>```#{r, message=FALSE, warning=FALSE, fig.width=6.5} #Data to use
 Temp12k &lt;- Temp12k sg &lt;- pullTsVariable(Temp12k,
 “climateInterpretation1_seasonalityGeneral”) ic &lt;-
@@ -97,11 +100,11 @@ unexpected number (’,length(fTS),‘) of proxy records filtered. The
 expected number should be 782 for DCC’))} fTS &lt;-
 fTS[!is.na(lapply(pullTsVariable(fTS,‘age’),mean,na.rm=T))] for (i in
 1:length(fTS)){ unc &lt;-
-as.numeric(fTS[[i]]<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mi>a</mi><mi>l</mi><mi>e</mi><mi>o</mi><mi>D</mi><mi>a</mi><mi>t</mi><msub><mi>a</mi><mi>t</mi></msub><mi>e</mi><mi>m</mi><mi>p</mi><mi>e</mi><mi>r</mi><mi>a</mi><mi>t</mi><mi>u</mi><mi>r</mi><mi>e</mi><mn>12</mn><mi>k</mi><mi>U</mi><mi>n</mi><mi>c</mi><mi>e</mi><mi>r</mi><mi>t</mi><mi>a</mi><mi>i</mi><mi>n</mi><mi>t</mi><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mi>i</mi><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>l</mi><mi>e</mi><mi>n</mi><mi>g</mi><mi>t</mi><mi>h</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>u</mi><mi>n</mi><mi>c</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mo>=</mo><mn>0</mn><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mi>u</mi><mi>n</mi><mi>c</mi><mo>&lt;</mo><mo>−</mo><mi>N</mi><mi>A</mi></mrow><mi>p</mi><mi>r</mi><mi>o</mi><mi>x</mi><mi>y</mi><mo>&lt;</mo><mo>−</mo><mi>t</mi><mi>o</mi><mi>l</mi><mi>o</mi><mi>w</mi><mi>e</mi><mi>r</mi><mo stretchy="false" form="prefix">(</mo><mi>f</mi><mi>T</mi><mi>S</mi><mrow><mo stretchy="true" form="prefix">[</mo><mrow><mo stretchy="true" form="prefix">[</mo><mi>i</mi><mo stretchy="true" form="postfix">]</mo></mrow><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">paleoData_temperature12kUncertainty)
+as.numeric(fTS[[i]]<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mi>a</mi><mi>l</mi><mi>e</mi><mi>o</mi><mi>D</mi><mi>a</mi><mi>t</mi><msub><mi>a</mi><mi>t</mi></msub><mi>e</mi><mi>m</mi><mi>p</mi><mi>e</mi><mi>r</mi><mi>a</mi><mi>t</mi><mi>u</mi><mi>r</mi><mi>e</mi><mn>12</mn><mi>k</mi><mi>U</mi><mi>n</mi><mi>c</mi><mi>e</mi><mi>r</mi><mi>t</mi><mi>a</mi><mi>i</mi><mi>n</mi><mi>t</mi><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mi>i</mi><mi>f</mi><mo stretchy="false" form="prefix">(</mo><mi>l</mi><mi>e</mi><mi>n</mi><mi>g</mi><mi>t</mi><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>u</mi><mi>n</mi><mi>c</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mo>=</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mrow><mi>u</mi><mi>n</mi><mi>c</mi><mo>&lt;</mo><mi>−</mi><mi>N</mi><mi>A</mi></mrow><mi>p</mi><mi>r</mi><mi>o</mi><mi>x</mi><mi>y</mi><mo>&lt;</mo><mi>−</mi><mi>t</mi><mi>o</mi><mi>l</mi><mi>o</mi><mi>w</mi><mi>e</mi><mi>r</mi><mo stretchy="false" form="prefix">(</mo><mi>f</mi><mi>T</mi><mi>S</mi><mo stretchy="false" form="prefix">[</mo><mo stretchy="false" form="prefix">[</mo><mi>i</mi><mo stretchy="false" form="postfix">]</mo><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">paleoData_temperature12kUncertainty)
   if (length(unc)==0){unc&lt;-NA}
   proxy   &lt;- tolower(fTS[[i]]</annotation></semantics></math>paleoData_proxy)
 archive &lt;-
-tolower(fTS[[i]]<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mi>r</mi><mi>c</mi><mi>h</mi><mi>i</mi><mi>v</mi><mi>e</mi><mi>T</mi><mi>y</mi><mi>p</mi><mi>e</mi><mo stretchy="false" form="postfix">)</mo><mi>s</mi><mi>e</mi><mi>a</mi><mi>s</mi><mi>o</mi><mi>n</mi><mo>&lt;</mo><mo>−</mo><mi>t</mi><mi>o</mi><mi>l</mi><mi>o</mi><mi>w</mi><mi>e</mi><mi>r</mi><mo stretchy="false" form="prefix">(</mo><mi>f</mi><mi>T</mi><mi>S</mi><mrow><mo stretchy="true" form="prefix">[</mo><mrow><mo stretchy="true" form="prefix">[</mo><mi>i</mi><mo stretchy="true" form="postfix">]</mo></mrow><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">archiveType)
+tolower(fTS[[i]]<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mi>r</mi><mi>c</mi><mi>h</mi><mi>i</mi><mi>v</mi><mi>e</mi><mi>T</mi><mi>y</mi><mi>p</mi><mi>e</mi><mo stretchy="false" form="postfix">)</mo><mi>s</mi><mi>e</mi><mi>a</mi><mi>s</mi><mi>o</mi><mi>n</mi><mo>&lt;</mo><mi>−</mi><mi>t</mi><mi>o</mi><mi>l</mi><mi>o</mi><mi>w</mi><mi>e</mi><mi>r</mi><mo stretchy="false" form="prefix">(</mo><mi>f</mi><mi>T</mi><mi>S</mi><mo stretchy="false" form="prefix">[</mo><mo stretchy="false" form="prefix">[</mo><mi>i</mi><mo stretchy="false" form="postfix">]</mo><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">archiveType)
   season  &lt;- tolower(fTS[[i]]</annotation></semantics></math>climateInterpretation1_seasonalityGeneral)
 if (is.na(unc)){ if (grepl(‘marine’,archive) &amp; proxy == “alkenone”){
 unc &lt;- 1.7 } else if (grepl(‘marine’,archive) &amp; proxy ==
@@ -165,8 +168,8 @@ extract2, ‘timeCount’) countMat[is.na(countMat)] &lt;- 0
 reformatComposite[[group]] &lt;-
 as.data.frame(cbind(age=X,count=apply(countMat,1,median),compMat)) }
 reformatComposite[[‘average’]] &lt;- reformatComposite[[group]]*NA
-reformatComposite[[‘average’]]<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mi>g</mi><mi>e</mi><mo>&lt;</mo><mo>−</mo><mi>a</mi><mi>p</mi><mi>p</mi><mi>l</mi><mi>y</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mi>a</mi><mi>p</mi><mi>p</mi><mi>l</mi><mi>y</mi><mo stretchy="false" form="prefix">(</mo><mi>r</mi><mi>e</mi><mi>f</mi><mi>o</mi><mi>r</mi><mi>m</mi><mi>a</mi><mi>t</mi><mi>C</mi><mi>o</mi><mi>m</mi><mi>p</mi><mi>o</mi><mi>s</mi><mi>i</mi><mi>t</mi><mi>e</mi><mo>,</mo><mi>f</mi><mi>u</mi><mi>n</mi><mi>c</mi><mi>t</mi><mi>i</mi><mi>o</mi><mi>n</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>d</mi><mi>f</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>d</mi><mi>f</mi></mrow><annotation encoding="application/x-tex">age   &lt;- apply(sapply(reformatComposite, function(df) df</annotation></semantics></math>age),1,mean,na.rm=T)
-reformatComposite[[‘average’]]<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>c</mi><mi>o</mi><mi>u</mi><mi>n</mi><mi>t</mi><mo>&lt;</mo><mo>−</mo><mi>a</mi><mi>p</mi><mi>p</mi><mi>l</mi><mi>y</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mi>a</mi><mi>p</mi><mi>p</mi><mi>l</mi><mi>y</mi><mo stretchy="false" form="prefix">(</mo><mi>r</mi><mi>e</mi><mi>f</mi><mi>o</mi><mi>r</mi><mi>m</mi><mi>a</mi><mi>t</mi><mi>C</mi><mi>o</mi><mi>m</mi><mi>p</mi><mi>o</mi><mi>s</mi><mi>i</mi><mi>t</mi><mi>e</mi><mo>,</mo><mi>f</mi><mi>u</mi><mi>n</mi><mi>c</mi><mi>t</mi><mi>i</mi><mi>o</mi><mi>n</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>d</mi><mi>f</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>d</mi><mi>f</mi></mrow><annotation encoding="application/x-tex">count &lt;- apply(sapply(reformatComposite, function(df) df</annotation></semantics></math>count),1,sum,na.rm=T)
+reformatComposite[[‘average’]]<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mi>g</mi><mi>e</mi><mo>&lt;</mo><mi>−</mi><mi>a</mi><mi>p</mi><mi>p</mi><mi>l</mi><mi>y</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mi>a</mi><mi>p</mi><mi>p</mi><mi>l</mi><mi>y</mi><mo stretchy="false" form="prefix">(</mo><mi>r</mi><mi>e</mi><mi>f</mi><mi>o</mi><mi>r</mi><mi>m</mi><mi>a</mi><mi>t</mi><mi>C</mi><mi>o</mi><mi>m</mi><mi>p</mi><mi>o</mi><mi>s</mi><mi>i</mi><mi>t</mi><mi>e</mi><mo>,</mo><mi>f</mi><mi>u</mi><mi>n</mi><mi>c</mi><mi>t</mi><mi>i</mi><mi>o</mi><mi>n</mi><mo stretchy="false" form="prefix">(</mo><mi>d</mi><mi>f</mi><mo stretchy="false" form="postfix">)</mo><mi>d</mi><mi>f</mi></mrow><annotation encoding="application/x-tex">age   &lt;- apply(sapply(reformatComposite, function(df) df</annotation></semantics></math>age),1,mean,na.rm=T)
+reformatComposite[[‘average’]]<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>c</mi><mi>o</mi><mi>u</mi><mi>n</mi><mi>t</mi><mo>&lt;</mo><mi>−</mi><mi>a</mi><mi>p</mi><mi>p</mi><mi>l</mi><mi>y</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mi>a</mi><mi>p</mi><mi>p</mi><mi>l</mi><mi>y</mi><mo stretchy="false" form="prefix">(</mo><mi>r</mi><mi>e</mi><mi>f</mi><mi>o</mi><mi>r</mi><mi>m</mi><mi>a</mi><mi>t</mi><mi>C</mi><mi>o</mi><mi>m</mi><mi>p</mi><mi>o</mi><mi>s</mi><mi>i</mi><mi>t</mi><mi>e</mi><mo>,</mo><mi>f</mi><mi>u</mi><mi>n</mi><mi>c</mi><mi>t</mi><mi>i</mi><mi>o</mi><mi>n</mi><mo stretchy="false" form="prefix">(</mo><mi>d</mi><mi>f</mi><mo stretchy="false" form="postfix">)</mo><mi>d</mi><mi>f</mi></mrow><annotation encoding="application/x-tex">count &lt;- apply(sapply(reformatComposite, function(df) df</annotation></semantics></math>count),1,sum,na.rm=T)
 for (c in colnames(reformatComposite[[‘average’]])[-c(1,2)]){
 reformatComposite[[‘average’]][[c]] &lt;-
 apply(sapply(reformatComposite, function(df) df[[c]]),1,mean,na.rm=T)
@@ -204,7 +207,7 @@ print(plt)
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
       </footer>

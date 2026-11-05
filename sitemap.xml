@@ -1,5 +1,6 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>/404.html</loc></url>
+<url><loc>/CLAUDE.html</loc></url>
 <url><loc>/LICENSE-text.html</loc></url>
 <url><loc>/LICENSE.html</loc></url>
 <url><loc>/articles/Gridded_composites.html</loc></url>
@@ -8,6 +9,7 @@
 <url><loc>/articles/index.html</loc></url>
 <url><loc>/authors.html</loc></url>
 <url><loc>/index.html</loc></url>
+<url><loc>/news/index.html</loc></url>
 <url><loc>/reference/Temp12k.html</loc></url>
 <url><loc>/reference/compositeEnsembles.html</loc></url>
 <url><loc>/reference/compositeEnsembles2.html</loc></url>
@@ -26,5 +28,6 @@
 <url><loc>/reference/standardizeMeanIteratively.html</loc></url>
 <url><loc>/reference/standardizeOverInterval.html</loc></url>
 <url><loc>/reference/standardizeOverRandomInterval.html</loc></url>
+<url><loc>/reference/summary.paleoComposite.html</loc></url>
 </urlset>
 
