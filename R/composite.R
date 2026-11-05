@@ -15,6 +15,7 @@
 #' @importFrom magrittr %>%
 #'
 #' @return a list. The main composite is in the list$composite matrix (needs a better definition here) TODO
+#' @seealso [compositeEnsembles2()], the maintained ensemble-aware compositing function.
 #' @export
 compositeEnsembles <- function(fTS,
                                binvec,
@@ -26,6 +27,12 @@ compositeEnsembles <- function(fTS,
                                scope = "climate",
                                binFun = sampleEnsembleThenBinTs,
                                ...){
+
+  #compositeEnsembles2() supersedes this single-ensemble API; warn once per session
+  if(is.null(getOption("compositeR.compositeEnsembles.deprecated"))){
+    warning("compositeEnsembles() is superseded by compositeEnsembles2(), which returns a full ensemble of composites. compositeEnsembles() will be removed in a future release.")
+    options(compositeR.compositeEnsembles.deprecated = TRUE)
+  }
 
   binAges <- rowMeans(cbind(binvec[-1],binvec[-length(binvec)]))
 
@@ -204,7 +211,7 @@ compositeEnsembles2 <- function(fTS,
               composite = compMat[,-1],
               proxyVals = proxyMat[,-1],
               proxyUsed = proxyPctUsed[,-1])
-  out[['paramaters']] <- data.frame(nens=nens,
+  out[['parameters']] <- data.frame(nens=nens,
                                     ageVar=ageVar,
                                     uncVar=uncVar,
                                     weights=weights,
@@ -214,6 +221,9 @@ compositeEnsembles2 <- function(fTS,
                                     gaussianizeInput=gaussianizeInput,
                                     alignInterpDirection=alignInterpDirection,
                                     scope=scope)
+  #`paramaters` (misspelled) is retained for one deprecation cycle; use
+  #`parameters`.
+  out[['paramaters']] <- out[['parameters']]
   return(new_composite(out))
 }
 

@@ -22,7 +22,7 @@ plot.paleoComposite <- function(x,...){
 #' @import ggplot2
 #' @import dplyr
 #' @importFrom stats median
-#' @importFrom geoChronR plotTimeseriesEnsRibbons
+#' @importFrom lipdViz plotTimeseriesEnsRibbons
 #' @importFrom egg ggarrange
 #'
 #' @param compositeList The output of compositeEnsembles2()
@@ -30,7 +30,7 @@ plot.paleoComposite <- function(x,...){
 #' @param valUnits units for the composite (default = standardized)
 #' @param title a title for the combined plot (not used if combine == FALSE)
 #' @param combine output a combined figure using egg::ggarrange or provide a list of subplots
-#' @inheritDotParams geoChronR::plotTimeseriesEnsRibbons probs color.low color.high color.line color.vector line.width
+#' @inheritDotParams lipdViz::plotTimeseriesEnsRibbons probs color.low color.high color.line color.vector line.width
 #'
 #' @return a combined or list of gg plots
 #' @export
@@ -41,7 +41,7 @@ plotComposite <- function(compositeList, ageUnits = 'yr BP',valUnits='standardiz
   #Plot
   compositeEns <- compositeList$composite[,(apply(!is.na(compositeList$composite),2,sum)>2)]
   if(NCOL(compositeEns)==0){stop('Too many NA. Check results')}
-  ensRibbon <- geoChronR::plotTimeseriesEnsRibbons(X=list(values = compositeList$ages, units=ageUnits, variableName='age'),
+  ensRibbon <- lipdViz::plotTimeseriesEnsRibbons(X=list(values = compositeList$ages, units=ageUnits, variableName='age'),
                                                      Y=list(values = compositeEns,units=valUnits, variableName='composite anomaly'),...)+
       theme_bw()
   # Add x axis
@@ -81,6 +81,32 @@ plotComposite <- function(compositeList, ageUnits = 'yr BP',valUnits='standardiz
 #' @export
 print.paleoComposite <- function(x,...){
   printComposite(x,...)
+}
+
+
+#' Summarize composite output
+#'
+#' @description Returns a one-row-per-bin summary data frame of a
+#' paleoComposite (the ensemble median and inter-quantile spread of the
+#' composite, and the number of proxies contributing at each bin), rather than
+#' printing to the console. Follows the family two-layer convention: the
+#' underlying object keeps its full ensemble matrices; this gives a compact
+#' tabular view.
+#'
+#' @param object a paleoComposite (output of compositeEnsembles2())
+#' @param probs quantiles of the composite ensemble to report (default 0.025, 0.5, 0.975)
+#' @param ... unused
+#' @importFrom stats quantile
+#' @return a data.frame with one row per age bin
+#' @export
+summary.paleoComposite <- function(object, probs = c(0.025, 0.5, 0.975), ...){
+  comp <- as.matrix(object$composite)
+  qs <- t(apply(comp, 1, stats::quantile, probs = probs, na.rm = TRUE))
+  colnames(qs) <- paste0("q", probs * 100)
+  data.frame(age = object$ages,
+             qs,
+             nProxy = round(apply(as.matrix(object$proxyUsed), 1, sum, na.rm = TRUE)),
+             check.names = FALSE)
 }
 
 

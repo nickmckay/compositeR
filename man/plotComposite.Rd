@@ -25,7 +25,7 @@ plotComposite(
 \item{combine}{output a combined figure using egg::ggarrange or provide a list of subplots}
 
 \item{...}{
-  Arguments passed on to \code{\link[geoChronR:plotTimeseriesEnsRibbons]{geoChronR::plotTimeseriesEnsRibbons}}
+  Arguments passed on to \code{\link[lipdViz:plotTimeseriesEnsRibbons]{lipdViz::plotTimeseriesEnsRibbons}}
   \describe{
     \item{\code{probs}}{a vector of probabilities to plot as ribbons. It will create bands as ribbons of quantiles moving inward. If there's an odd number, it plots the middle quantile as a line.}
     \item{\code{color.low}}{Color of the outermost band; the extreme quantiles of the distribution}

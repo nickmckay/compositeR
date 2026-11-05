@@ -26,7 +26,8 @@ Standard Calibrated Composite (SCC) is one method which uses a single time windo
 #LiPD packages
 library(lipdR)
 library(compositeR) #devtools::load_all() #
-library(geoChronR)
+library(ens) # ensemble methods (split out of geoChronR)
+library(lipdViz) # visualization (split out of geoChronR)
 #General Packages
 library(ggplot2)
 library(tidyr)
@@ -53,7 +54,7 @@ idx <- (pullTsVariable(Temp12k,'geo_latitude') > 50) & #arctic
        (pullTsVariable(Temp12k,'climateInterpretation1_seasonalityGeneral') %in% c('annual','summeronly','winteronly')) 
 fTS <- Temp12k[idx]
 #Map data to get a quick sense of what records we're using
-plot(geoChronR::mapTs(fTS,color='dataSetName',size=5,lat.range=c(55,85),lon.range=c(-90,-20)))
+plot(lipdViz::mapTs(fTS,color='dataSetName',size=5,lat.range=c(55,85),lon.range=c(-90,-20)))
 ```
 
 **Now let's look at the timeseries data (this code chunk does not use any compositeR function)**

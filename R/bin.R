@@ -177,7 +177,7 @@ simpleBinTs <- function(ts,
 
   #gaussianize if TRUE (default = FALSE)
   if(gaussianizeInput){
-    vals <- geoChronR::gaussianize(vals)
+    vals <- ens::gaussianize(vals)
   }
 
   #align if TRUE (default = TRUE)
@@ -205,7 +205,7 @@ simpleBinTs <- function(ts,
   }
 
   #bin
-  binnedVals <- geoChronR::bin(age,vals,bin.vec = binvec)[,2]
+  binnedVals <- ens::bin(age,vals,bin.vec = binvec)[,2]
 
   return(binnedVals)
 }
@@ -243,7 +243,7 @@ sampleEnsembleThenBinTs <- function(ts,
   if(NCOL(ts[[ageVar]]) > 1){#draw from ensemble
     thisAge <- ts[[ageVar]][ , sample.int(NCOL(ts[[ageVar]]),size = 1)]
   }else{#simulate
-    thisAge <- geoChronR::simulateBam(matrix(1,nrow = length(ts[[ageVar]])),as.matrix(ts[[ageVar]]),model = bamModel,ageEnsOut = TRUE)$ageEns
+    thisAge <- ens::simulateBam(matrix(1,nrow = length(ts[[ageVar]])),as.matrix(ts[[ageVar]]),model = bamModel,ageEnsOut = TRUE)$ageEns
   }
   ts_sampled[[ageVar]] <- thisAge
 
