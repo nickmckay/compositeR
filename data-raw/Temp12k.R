@@ -33,7 +33,8 @@ version <- '1_0_0'
 compilation <- 'temp12kEnsemble'
 #Load LiPD files with age ensembles
 #from https://github.com/nickmckay/Temperature12k/tree/ea854570be681680dc724fd6b2f31c0f4667483c/ScientificDataAnalysis/lipdFilesWithEnsembles
-lipdFilesWithEnsembles <- lipdR::readLipd(path="/data-raw/lipdFilesWithEnsembles/")
+#They are not kept in this repository; data-raw/README.md says how to get them.
+lipdFilesWithEnsembles <- lipdR::readLipd(path="data-raw/lipdFilesWithEnsembles/")
 #usethis::use_data(lipdFilesWithEnsembles)
 
 #Extract timeseries objects
