@@ -4,17 +4,18 @@
 2026 it is part of a six-package family and builds on **ens** (binning, gaussianize, BAM age
 simulation) and **lipdViz** (plotting) — it no longer depends on the monolithic geoChronR.
 
-Repo: nickmckay/compositeR. Branch: `refactor`.
+Repo: nickmckay/compositeR. Branch: `master`.
 
-## Package family (dependency DAG: ens ← lipdViz ← geoChronR; actR, compositeR & fluxcapacitoR on top)
+## Package family (dependency DAG: ens ← lipdViz ← agemodelR ← geoChronR; actR, compositeR & fluxcapacitoR on top)
 
 | Repo (`~/GitHub/...`) | GitHub | Branch | Role |
 |---|---|---|---|
 | ens | nickmckay/ens | main | Ensemble methods: `bin`, `gaussianize`, `simulateBam` |
 | lipdViz | nickmckay/lipdViz | main | Plotting (`plotTimeseriesEnsRibbons`, `mapTs`) |
-| geoChronR-chronOnly | nickmckay/geoChronR-chronOnly | main | Age modeling |
-| actR | **LinkedEarth/actR** | refactor | Abrupt-change detection |
-| **compositeR** (this repo) | nickmckay/compositeR | refactor | Record compositing |
+| agemodelR | nickmckay/agemodelR | main | Age modeling |
+| GeoChronR | nickmckay/GeoChronR | master | Wrapper re-exporting agemodelR, ens and lipdViz |
+| actR | **LinkedEarth/actR** | main | Abrupt-change detection |
+| **compositeR** (this repo) | nickmckay/compositeR | master | Record compositing |
 | fluxcapacitoR | nickmckay/fluxcapacitoR | main | Flux-focused varve age modeling |
 
 ## Architecture

@@ -37,7 +37,7 @@ gaussianization, and age-ensemble simulation, and on
 |---|---|
 | [ens](https://github.com/nickmckay/ens) | Ensemble methods: binning, uncertainty propagation, correlation, regression, PCA, spectra |
 | [lipdViz](https://github.com/nickmckay/lipdViz) | Visualization of LiPD data and ensemble analyses |
-| [geoChronR](https://github.com/nickmckay/geoChronR-chronOnly) | Age modeling (Bacon, Bchron, OxCal, BAM) |
+| [agemodelR](https://github.com/nickmckay/agemodelR) | Age modeling (Bacon, Bchron, OxCal, BAM) |
 | [actR](https://github.com/LinkedEarth/actR) | Abrupt-change detection |
 | **compositeR** | Paleoclimate record compositing (this package) |
 
