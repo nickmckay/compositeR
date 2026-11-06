@@ -13,6 +13,17 @@ usable <- which(sapply(Temp12k, function(x) {
 fTS <- Temp12k[usable]
 binvec <- seq(0, 10000, by = 500)
 
+# compositeR 0.5.0 added timeUnits to the output and parameters; the
+# reference predates it, so compare without those fields.
+asReference <- function(out, ageVar = "age") {
+  out$timeUnits <- NULL
+  out$parameters$timeUnits <- NULL
+  out$paramaters$timeUnits <- NULL
+  out$parameters$ageVar <- ageVar
+  out$paramaters$ageVar <- ageVar
+  out
+}
+
 makePdm <- function() {
   set.seed(9)
   ages <- seq(50, 9950, by = 100)
@@ -63,7 +74,7 @@ test_that("compositeEnsembles SCC-style matches pre-migration reference", {
                              interval = c(2000, 6000),
                              binFun = simpleBinTs,
                              verbose = FALSE)
-  expect_equal(out, ref$compositeSCC)
+  expect_equal(asReference(out), ref$compositeSCC)
   expect_s3_class(out, "paleoComposite")
 })
 
@@ -75,7 +86,7 @@ test_that("compositeEnsembles DCC-style matches pre-migration reference", {
                              searchRange = c(0, 9000),
                              binFun = sampleEnsembleThenBinTs,
                              verbose = FALSE)
-  expect_equal(out, ref$compositeDCC)
+  expect_equal(asReference(out), ref$compositeDCC)
   expect_s3_class(out, "paleoComposite")
 })
 
@@ -114,5 +125,15 @@ test_that("compositeEnsembles2 is a deprecated alias of compositeEnsembles", {
                                binFun = simpleBinTs, verbose = FALSE),
     "renamed compositeEnsembles"
   )
-  expect_equal(old, ref$compositeSCC)
+  expect_equal(asReference(old), ref$compositeSCC)
+})
+
+test_that("compositing on ageVar = 'age' (no conversion) still matches the reference", {
+  set.seed(20)
+  out <- compositeEnsembles(fTS, binvec, nens = 5, ageVar = "age",
+                             stanFun = standardizeOverInterval,
+                             interval = c(2000, 6000),
+                             binFun = simpleBinTs,
+                             verbose = FALSE)
+  expect_equal(asReference(out), ref$compositeSCC)
 })

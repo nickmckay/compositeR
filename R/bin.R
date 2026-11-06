@@ -134,7 +134,7 @@ spreadPaleoData <- function(age,
 
 #' simple binning of a lipd_ts object paleoData_values using a nearest neighbor approach
 #'
-#' @param ts a lipd_ts object
+#' @param ts one timeseries: an element of a TS list, or a one-row timeseries tibble
 #' @param binvec vector of time boundaries over which to bin
 #' @param ageVar specify the name the time variable (typically 'age' or 'year')
 #' @param spread should values be interpolated between bins? (TRUE/FALSE)
@@ -155,6 +155,7 @@ simpleBinTs <- function(ts,
                         gaussianizeInput= FALSE,
                         alignInterpDirection = TRUE,
                         scope = "climate"){
+  ts <- asTsEntry(ts)
 
   #Check not ensemble
 
@@ -223,6 +224,7 @@ sampleEnsembleThenBinTs <- function(ts,
                                     gaussianizeInput = FALSE,
                                     alignInterpDirection = TRUE,
                                     scope = "climate"){
+  ts <- asTsEntry(ts)
   ts_sampled <- ts
   #sample from ageEnsemble
   if(is.null(ts[[ageVar]])){
@@ -376,4 +378,14 @@ isExactlyDated <- function(ts, exactAgeArchives){
     return(FALSE)
   }
   tolower(at[1]) %in% tolower(exactAgeArchives)
+}
+
+
+# One timeseries as a list, from a TS element or a one-row tibble
+asTsEntry <- function(ts){
+  if(is.data.frame(ts)){
+    if(nrow(ts) != 1){stop("Expected one timeseries (a one-row tibble), but got ", nrow(ts), " rows.")}
+    ts <- purrr::transpose(as.list(ts))[[1]]
+  }
+  ts
 }

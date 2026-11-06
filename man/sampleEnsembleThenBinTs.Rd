@@ -23,7 +23,7 @@ sampleEnsembleThenBinTs(
 )
 }
 \arguments{
-\item{ts}{a lipd_ts object}
+\item{ts}{one timeseries: an element of a TS list, or a one-row timeseries tibble}
 
 \item{binvec}{vector of time boundaries over which to bin}
 

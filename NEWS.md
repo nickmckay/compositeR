@@ -1,3 +1,10 @@
+# compositeR 0.5.0
+
+* `compositeEnsembles()` now composites on each record's `time` by default (`ageVar = "time"`), converted to a common scale with the new `timeUnits` argument (default `"yr BP"`). It uses the time metadata that lipdR 0.7 adds in `extractTs()`, so records in year CE (tree rings, corals, documents), yr BP and ka can be composited together without converting them first. `binvec` is in `timeUnits`. A record's age ensemble (`ageEnsemble`) is used when it has one, except with `binFun = simpleBinTs`. Requires lipdR >= 0.7.3.
+* Any other `ageVar` (for example `"age"` or `"ageEnsemble"`) is used as it is, as before. Results for Temp12k-style inputs, whose `age` is already in yr BP, are unchanged.
+* Composites record their `timeUnits`. `plotComposite()` and `printComposite()` label the time axis with them, and year CE axes run forward instead of reversed.
+* `simpleBinTs()` and `sampleEnsembleThenBinTs()` accept a one-row timeseries tibble as well as a TS element.
+
 # compositeR 0.4.0
 
 * `compositeEnsembles2()` is now `compositeEnsembles()`. The old name still works but warns that it is deprecated. The old single-ensemble `compositeEnsembles()`, deprecated in 0.3.0, has been removed; scripts that need it (for example the Temperature12k analysis code) should use compositeR 0.3.0.

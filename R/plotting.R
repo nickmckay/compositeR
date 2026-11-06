@@ -26,7 +26,7 @@ plot.paleoComposite <- function(x,...){
 #' @importFrom egg ggarrange
 #'
 #' @param compositeList The output of compositeEnsembles()
-#' @param ageUnits units for the age variable
+#' @param ageUnits units of the time axis. NULL (default) uses the units the composite was made in (`compositeList$timeUnits`), or "yr BP" for older composites. Year CE axes run forward; other axes are reversed.
 #' @param valUnits units for the composite (default = standardized)
 #' @param title a title for the combined plot (not used if combine == FALSE)
 #' @param combine output a combined figure using egg::ggarrange or provide a list of subplots
@@ -36,8 +36,13 @@ plot.paleoComposite <- function(x,...){
 #' @export
 
 
-plotComposite <- function(compositeList, ageUnits = 'yr BP',valUnits='standardized',title='composite proxy record', combine=TRUE,...){
-  ar <- rev(range(compositeList$ages))
+plotComposite <- function(compositeList, ageUnits = NULL,valUnits='standardized',title='composite proxy record', combine=TRUE,...){
+  ageUnits <- ageUnits %||% compositeList$timeUnits %||% 'yr BP'
+  prograde <- isProgradeUnits(ageUnits)
+  timeName <- if(prograde) 'year' else 'age'
+  scaleX <- if(prograde) ggplot2::scale_x_continuous else ggplot2::scale_x_reverse
+  ar <- range(compositeList$ages)
+  if(!prograde){ar <- rev(ar)}
   #Plot
   compositeEns <- compositeList$composite[,(apply(!is.na(compositeList$composite),2,sum)>2)]
   if(NCOL(compositeEns)==0){stop('Too many NA. Check results')}
@@ -46,8 +51,8 @@ plotComposite <- function(compositeList, ageUnits = 'yr BP',valUnits='standardiz
       theme_bw()
   # Add x axis
   ensRibbon <- suppressMessages(ensRibbon +
-                                  scale_x_reverse(limits=ar, expand=c(0,0),
-                                                  name=ifelse(combine, ' ', paste0('age (',ageUnits,')')),
+                                  scaleX(limits=ar, expand=c(0,0),
+                                                  name=ifelse(combine, ' ', paste0(timeName,' (',ageUnits,')')),
                                                   position=ifelse(combine, 'top', 'bottom'))
   )
 
@@ -58,7 +63,7 @@ plotComposite <- function(compositeList, ageUnits = 'yr BP',valUnits='standardiz
     geom_bar(stat="identity",aes(x=compositeList$ages,y=apply(compositeList$proxyUsed>0,1,sum)),
              fill='lightgrey',color='darkgrey',width=bs)+
     scale_y_continuous(limits=c(0,ncol(compositeList$proxyUsed)*1.1),expand=c(0,0),name='count')+
-    scale_x_reverse(limits=c(ar[1]+bs/2,ar[2]-bs/2),expand=c(0,0),name=paste0('age (',ageUnits,')')) + theme_bw()
+    scaleX(limits=if(prograde) c(ar[1]-bs/2,ar[2]+bs/2) else c(ar[1]+bs/2,ar[2]-bs/2),expand=c(0,0),name=paste0(timeName,' (',ageUnits,')')) + theme_bw()
   #
   #Combine
   plots <- list(compositeEns=ensRibbon,dataUsed=tsAvailability)
@@ -119,6 +124,7 @@ summary.paleoComposite <- function(object, probs = c(0.025, 0.5, 0.975), ...){
 #' @export
 printComposite <- function(compositeList){ #com params.to.print = c("cpt.fun","minimum.segment.length","method","penalty","ncpts.max")){
   #
+  units <- compositeList$timeUnits %||% 'yr BP'
   new_df <- data.frame(age=compositeList$ages,
                        median=round(apply(compositeList$composite,1,median,na.rm=T),4),
                        count=round(apply(compositeList$proxyUsed,1,sum,na.rm=T)))
@@ -127,19 +133,19 @@ printComposite <- function(compositeList){ #com params.to.print = c("cpt.fun","m
   #Composote created
   ar <- crayon::green(paste(range(new_df$age), collapse='-'))
   res <-  crayon::green(median(diff(new_df$age)))
-  messages[[1]] <- glue("Composite created for ages: {ar} yr BP at {res} year resolution")
+  messages[[1]] <- glue("Composite created for times: {ar} {units} at {res} {sub(' *(BP|AD|CE|b2k)$', '', units)} resolution")
 
   #Number of records
   proxyN <- crayon::green(NCOL(compositeList$proxyUsed))
   ar <- crayon::green(paste(range((new_df %>% dplyr::filter(count==max(new_df$count,na.rm=T)))$age), collapse='-'))
-  messages[[2]] <- glue("{proxyN} proxy records used. The maximum data density occurs between {ar} yr BP")
+  messages[[2]] <- glue("{proxyN} proxy records used. The maximum data density occurs between {ar} {units}")
 
   #ensembles
   messages[[3]] <- glue("{crayon::green(NCOL(compositeList$composite))} ensembles generated")
   agemin <- new_df$age[new_df$median==min(new_df$median)]
   agemax <- new_df$age[new_df$median==max(new_df$median)]
-  messages[[4]] <- glue("The maximum median value occurs at {crayon::red(agemax)} yr BP.")
-  messages[[5]] <- glue("The minimum median value occurs at {crayon::blue(agemin)} yr BP.")
+  messages[[4]] <- glue("The maximum median value occurs at {crayon::red(agemax)} {units}.")
+  messages[[5]] <- glue("The minimum median value occurs at {crayon::blue(agemin)} {units}.")
 
   #print
   for (m in messages){print(m)}

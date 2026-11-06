@@ -6,7 +6,7 @@
 \usage{
 plotComposite(
   compositeList,
-  ageUnits = "yr BP",
+  ageUnits = NULL,
   valUnits = "standardized",
   title = "composite proxy record",
   combine = TRUE,
@@ -16,7 +16,7 @@ plotComposite(
 \arguments{
 \item{compositeList}{The output of compositeEnsembles()}
 
-\item{ageUnits}{units for the age variable}
+\item{ageUnits}{units of the time axis. NULL (default) uses the units the composite was made in (`compositeList$timeUnits`), or "yr BP" for older composites. Year CE axes run forward; other axes are reversed.}
 
 \item{valUnits}{units for the composite (default = standardized)}
 

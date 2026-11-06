@@ -8,11 +8,8 @@
 #' @return a TS list
 #' @keywords internal
 asTsList <- function(fTS){
-  if(inherits(fTS, "lipd_ts_tibble")){
+  if(is.data.frame(fTS) || inherits(fTS, "lipd_ts")){
     return(lipdR::as.lipdTs(fTS))
-  }
-  if(is.data.frame(fTS)){
-    return(purrr::transpose(as.list(fTS)))
   }
   fTS
 }
@@ -34,7 +31,8 @@ asTsList <- function(fTS){
 #' @param weights weights for calculating the composite mean. \cr - For example, you may want to weight each record in a region relative to the number of total records from a single site.  \cr - Use a string to identify a fTS variable name, otherwise all values will be weighted equally.
 #' @param samplePct the percent of records to used for each ensemble.  \cr - If length(fTS)*samplePct <= 3, this is ignored.  \cr - Default = 1 which means that 100 percent of records are used for each ensemble
 #' @param scale scale each composite ensemble member to have a mean of zero and unit variance at the end of the compiting
-#' @param ageVar age variable to use
+#' @param ageVar the time variable to composite on. The default, "time", uses each record's time axis converted to `timeUnits` with [lipdR::getTsTime()], so records in year CE, yr BP or ka can be composited together, and an age ensemble (`ageEnsemble`) is used when a record has one. Any other name (e.g. "age" or "ageEnsemble") is used as it is, without conversion, as before compositeR 0.5.0.
+#' @param timeUnits the time scale to composite on when `ageVar = "time"` (default "yr BP"). `binvec` is in these units. Also used to label the output.
 #' @param spread "Spread" data before binning to prevent aliasing of bins (default = TRUE)
 #' @param gaussianizeInput "Gaussianize" the data before compositing to avoid impacts of irregularly distributed data (default = TRUE)
 #' @param alignInterpDirection multiply each record by -1 if its interpretation direction is negative, so that all records point the same way (see [interpDirectionSign()])
@@ -51,7 +49,8 @@ compositeEnsembles <- function(fTS,
                                binvec,
                                nens = 100,
                                stanFun = standardizeOverRandomInterval,
-                               ageVar = "age",
+                               ageVar = "time",
+                               timeUnits = "yr BP",
                                uncVar = NA,
                                uncUnits = c("native", "sd"),
                                weights = NA,
@@ -70,6 +69,13 @@ compositeEnsembles <- function(fTS,
     stop("uncUnits = 'sd' applies to a numeric uncVar. Uncertainties read from the timeseries ('", uncVar, "') are in the records' own units.")
   }
 
+  # Put every record on the same time scale # #############################
+  binAgeVar <- ageVar
+  if(identical(ageVar, "time")){
+    fTS <- addCompositeTime(fTS, timeUnits, ensemble = !identical(binFun, simpleBinTs))
+    binAgeVar <- ".compositeTime"
+  }
+
   # Bin ages # #############################
   if(!is.numeric(binvec)){stop("binvec must be numeric")}
   binvec <- sort(binvec)
@@ -77,7 +83,7 @@ compositeEnsembles <- function(fTS,
 
   # Warnings # #############################
   # Check that necessary variables are provided in lipd files
-  for (name in c("paleoData_TSid",ageVar)){
+  for (name in c("paleoData_TSid",binAgeVar)){
     check <- unlist(lapply(lipdR::pullTsVariable(fTS,name),is.null))
     if (sum(check)>0){ stop(paste0("ERROR: No '",name,"' variable for fTS[c(",(paste(which(!check),collapse=', ')),")]")) }
   }
@@ -117,17 +123,17 @@ compositeEnsembles <- function(fTS,
     #Align paleodata ages to common binstep
     if (is.character(uncVar)){ #use uncVar in lipd file
       binMatR <- suppressMessages(as.matrix(purrr::map_dfc(
-        fTS, binFun, binvec, ageVar=ageVar, uncVar=uncVar, #uncVar=uncVar
+        fTS, binFun, binvec, ageVar=binAgeVar, uncVar=uncVar, #uncVar=uncVar
         spread=spread, gaussianizeInput=gaussianizeInput, alignInterpDirection=alignInterpDirection, scope=scope
         )))
     } else if (is.numeric(uncVar)){ #use a default number
       binMatR <- suppressMessages(as.matrix(purrr::map_dfc(
-        fTS, binFun, binvec, ageVar=ageVar, defaultUnc=uncVar, uncUnits=uncUnits,
+        fTS, binFun, binvec, ageVar=binAgeVar, defaultUnc=uncVar, uncUnits=uncUnits,
         spread=spread, gaussianizeInput=gaussianizeInput, alignInterpDirection=alignInterpDirection, scope=scope
         )))
     } else{
       binMatR <- suppressMessages(as.matrix(purrr::map_dfc(
-        fTS, binFun, binvec, ageVar=ageVar,
+        fTS, binFun, binvec, ageVar=binAgeVar,
         spread=spread, gaussianizeInput=gaussianizeInput, alignInterpDirection=alignInterpDirection, scope=scope
         )))
     }
@@ -178,9 +184,11 @@ compositeEnsembles <- function(fTS,
   out <- list(ages =  compMat$age,
               composite = compMat[,-1],
               proxyVals = proxyMat[,-1],
-              proxyUsed = proxyPctUsed[,-1])
+              proxyUsed = proxyPctUsed[,-1],
+              timeUnits = timeUnits)
   out[['parameters']] <- data.frame(nens=nens,
                                     ageVar=ageVar,
+                                    timeUnits=timeUnits,
                                     uncVar=uncVar,
                                     weights=weights,
                                     samplePct=samplePct,
@@ -223,4 +231,36 @@ compositeEnsembles2 <- function(...){
     options(compositeR.compositeEnsembles2.deprecated = TRUE)
   }
   compositeEnsembles(...)
+}
+
+
+#' Add each record's time, on one scale, for compositing
+#'
+#' @param fTS a TS list
+#' @param timeUnits the target time scale
+#' @param ensemble use age ensembles where records have them?
+#' @return fTS with a `.compositeTime` field on every record
+#' @keywords internal
+addCompositeTime <- function(fTS, timeUnits, ensemble = TRUE){
+  for(i in seq_along(fTS)){
+    tm <- tryCatch(lipdR::getTsTime(fTS[[i]], units = timeUnits, ensemble = ensemble),
+                   error = function(e){
+                     id <- fTS[[i]]$paleoData_TSid %||% fTS[[i]]$dataSetName %||% paste0("fTS[[", i, "]]")
+                     stop("Can't put ", id, " on the ", timeUnits, " scale: ", conditionMessage(e), call. = FALSE)
+                   })
+    attr(tm, "timeUnits") <- NULL
+    fTS[[i]]$.compositeTime <- tm
+  }
+  fTS
+}
+
+`%||%` <- function(x, y){
+  if(is.null(x)) y else x
+}
+
+# Does a time scale count forward (year CE) rather than back (yr BP, ka)?
+isProgradeUnits <- function(units){
+  !is.null(units) && !is.na(units) &&
+    grepl("\\b(AD|CE)\\b", units, ignore.case = TRUE) &&
+    !grepl("\\bBC", units, ignore.case = TRUE)
 }
