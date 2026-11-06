@@ -25,7 +25,5 @@ importFrom(glue,glue)
 importFrom(lipdViz,plotTimeseriesEnsRibbons)
 importFrom(magrittr,"%>%")
 importFrom(pracma,interp1)
-importFrom(stats,
-  median,
-  quantile
-)
+importFrom(stats,median)
+importFrom(stats,quantile)
