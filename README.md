@@ -42,5 +42,5 @@ gaussianization, and age-ensemble simulation, and on
 | **compositeR** | Paleoclimate record compositing (this package) |
 
 Compositing methods plug in through the `binFun` and `stanFun` arguments of
-`compositeEnsembles2()`, so custom binning or standardization strategies can be
+`compositeEnsembles()`, so custom binning or standardization strategies can be
 supplied without modifying the package.

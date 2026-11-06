@@ -139,8 +139,8 @@ spreadPaleoData <- function(age,
 #' @param ageVar specify the name the time variable (typically 'age' or 'year')
 #' @param spread should values be interpolated between bins? (TRUE/FALSE)
 #' @param gaussianizeInput Force values to gaussian distribution before analysis (TRUE/FALSE)
-#' @param alignInterpDirection multiply values by -1 if scope_interpDirection == negative (TRUE/FALSE)
-#' @param scope the scope of the project (typically "climate" (default) or "isotope")
+#' @param alignInterpDirection multiply values by -1 if the interpretation direction is negative (TRUE/FALSE). See [interpDirectionSign()].
+#' @param scope the interpretation scope to align with (typically "climate" (default) or "isotope"). See [interpDirectionSign()].
 #' @inheritParams spreadPaleoData
 #'
 #' @return numeric vector of values of equal length to binvec
@@ -182,25 +182,9 @@ simpleBinTs <- function(ts,
 
   #align if TRUE (default = TRUE)
   if(alignInterpDirection){
-    #check for direction
-    din <- names(ts)[stringr::str_detect("_interpDirection",string = names(ts))]
-    di <- unlist(magrittr::extract(ts,din))
-    #check for scope
-    sin <- names(ts)[stringr::str_detect("scope",string = names(ts))]
-    si <- unlist(magrittr::extract(ts,sin))
-    if(!is.na(scope)){di <- di[grepl(pattern = scope,x = si)]}
-    #If negative, multiply by -1
-    if(length(di)>0){
-      #check for either negative/positive or -1/1
-      if(is.character(di)){
-        if(grepl(pattern = "neg", di[1], ignore.case = TRUE)){
-          vals <- vals * -1
-        }
-      }else{
-        if(di[1]<0){
-          vals <- vals * -1
-        }
-      }
+    di <- interpDirectionSign(ts, scope = scope)
+    if(!is.na(di) && di < 0){
+      vals <- vals * -1
     }
   }
 
@@ -219,6 +203,7 @@ simpleBinTs <- function(ts,
 #' @param defaultUnc a uncertainty to use if uncVar is NULL (default = 1.5 paleoData_units)
 #' @param ar Autocorrelation coefficient to use for modelling uncertainty on paleoData, what fraction of the uncertainties are autocorrelated? (default = sqrt(0.5); or 50 percent autocorrelated uncertainty)
 #' @param bamModel a list that describes the model to use in BAM (default = list(ns = 1, name = "bernoulli", param = 0.05))
+#' @param exactAgeArchives archive types (matched case-insensitively against `ts$archiveType`) whose ages are treated as exact, so no age uncertainty is simulated for them when they have a single age vector. Defaults to tree rings ("Wood") and historical documents. Use `character(0)` to simulate age uncertainty for every record.
 #'
 #' @return  numeric vector of values of equal length to binvec
 #' @export
@@ -229,6 +214,7 @@ sampleEnsembleThenBinTs <- function(ts,
                                     defaultUnc = 1.5,
                                     ar = sqrt(0.5),
                                     bamModel = list(ns = 1, name = "bernoulli", param = 0.05),
+                                    exactAgeArchives = c("Wood", "Documents"),
                                     spread = TRUE,
                                     spreadBy = abs(mean(diff(binvec)))/10,
                                     spreadMax =  as.numeric(stats::quantile(abs(diff(thisAge)),probs = .75,na.rm = TRUE)),
@@ -242,6 +228,8 @@ sampleEnsembleThenBinTs <- function(ts,
   }
   if(NCOL(ts[[ageVar]]) > 1){#draw from ensemble
     thisAge <- ts[[ageVar]][ , sample.int(NCOL(ts[[ageVar]]),size = 1)]
+  }else if(isExactlyDated(ts, exactAgeArchives)){#precisely dated (e.g. tree rings): use the ages as they are
+    thisAge <- ts[[ageVar]]
   }else{#simulate
     thisAge <- ens::simulateBam(matrix(1,nrow = length(ts[[ageVar]])),as.matrix(ts[[ageVar]]),model = bamModel,ageEnsOut = TRUE)$ageEns
   }
@@ -273,4 +261,115 @@ sampleEnsembleThenBinTs <- function(ts,
 
   return(binnedVals)
 
+}
+
+
+#' Sign of a timeseries' interpretation direction
+#'
+#' Finds the interpretation direction of a LiPD timeseries and returns 1 if
+#' larger values mean more of the interpreted variable, -1 if they mean less,
+#' and NA if there is no usable direction.
+#'
+#' Directions are read from `interpretationN_direction` fields (current LiPD),
+#' or from legacy `climateInterpretationN_interpDirection` style fields.
+#' Values beginning with "pos" or "incr" count as positive, "neg" or "decr"
+#' as negative (case-insensitive), and numbers by their sign. Anything else
+#' (e.g. "decrease/increase") gives NA.
+#'
+#' If `scope` is given, the first interpretation with that scope
+#' (`interpretationN_scope`) is used. If none has that scope, the first
+#' interpretation without a scope is used. If `scope` is NA, the first
+#' interpretation with a direction is used.
+#'
+#' @param ts a single timeseries (one element of a TS list, or one row of a timeseries tibble)
+#' @param scope interpretation scope to use, e.g. "climate" (default) or "isotope"
+#'
+#' @return 1, -1 or NA
+#' @export
+interpDirectionSign <- function(ts, scope = "climate"){
+  if(is.data.frame(ts)){
+    ts <- purrr::transpose(as.list(ts))[[1]]
+  }
+  nm <- names(ts)
+  dirNames <- nm[grepl("^interpretation[0-9]+_direction$", nm) |
+                   grepl("[Ii]nterpretation[0-9]+_interpDirection$", nm)]
+  if(length(dirNames) == 0){
+    return(NA_real_)
+  }
+  getVal <- function(n){
+    v <- unlist(ts[[n]])
+    if(length(v) == 0){
+      return(NA)
+    }
+    v[1]
+  }
+  scopeOf <- function(dn){
+    #legacy names carry the scope as a prefix, e.g. climateInterpretation1_interpDirection
+    if(grepl("^[a-z]+Interpretation[0-9]+_interpDirection$", dn)){
+      return(sub("Interpretation.*$", "", dn))
+    }
+    sn <- sub("_(interpD|d)irection$", "_scope", dn)
+    s <- if(sn %in% nm) getVal(sn) else NA
+    if(is.na(s) || !nzchar(trimws(as.character(s)))){
+      return(NA_character_)
+    }
+    tolower(trimws(as.character(s)))
+  }
+  parseDir <- function(d){
+    if(is.null(d) || length(d) == 0 || is.na(d)){
+      return(NA_real_)
+    }
+    if(is.numeric(d)){
+      return(if(d < 0) -1 else if(d > 0) 1 else NA_real_)
+    }
+    d <- tolower(trimws(as.character(d)))
+    #ambiguous, e.g. "decrease/increase" or "t_air (positive), p_amount (negative)"
+    if(grepl("[/,;]", d)){
+      return(NA_real_)
+    }
+    if(grepl("^(pos|incr)", d)){
+      return(1)
+    }
+    if(grepl("^(neg|decr)", d)){
+      return(-1)
+    }
+    num <- suppressWarnings(as.numeric(d))
+    if(!is.na(num) && num != 0){
+      return(sign(num))
+    }
+    NA_real_
+  }
+  #order by interpretation number
+  idx <- suppressWarnings(as.numeric(sub("^.*[Ii]nterpretation([0-9]+)_.*$", "\\1", dirNames)))
+  dirNames <- dirNames[order(idx)]
+  dirs <- vapply(dirNames, function(n) parseDir(getVal(n)), numeric(1))
+  if(is.na(scope)){
+    ok <- which(!is.na(dirs))
+    return(if(length(ok)) unname(dirs[ok[1]]) else NA_real_)
+  }
+  scopes <- vapply(dirNames, scopeOf, character(1))
+  hit <- which(scopes == tolower(scope))
+  if(length(hit) == 0){
+    hit <- which(is.na(scopes))
+  }
+  if(length(hit) == 0){
+    return(NA_real_)
+  }
+  unname(dirs[hit[1]])
+}
+
+#' Is a timeseries from an archive with exact ages?
+#' @param ts a single timeseries
+#' @param exactAgeArchives archive types treated as exactly dated
+#' @return TRUE/FALSE
+#' @keywords internal
+isExactlyDated <- function(ts, exactAgeArchives){
+  if(length(exactAgeArchives) == 0){
+    return(FALSE)
+  }
+  at <- unlist(ts$archiveType)
+  if(length(at) == 0 || is.na(at[1])){
+    return(FALSE)
+  }
+  tolower(at[1]) %in% tolower(exactAgeArchives)
 }

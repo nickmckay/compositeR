@@ -32,9 +32,9 @@ simpleBinTs(
 
 \item{gaussianizeInput}{Force values to gaussian distribution before analysis (TRUE/FALSE)}
 
-\item{alignInterpDirection}{multiply values by -1 if scope_interpDirection == negative (TRUE/FALSE)}
+\item{alignInterpDirection}{multiply values by -1 if the interpretation direction is negative (TRUE/FALSE). See [interpDirectionSign()].}
 
-\item{scope}{the scope of the project (typically "climate" (default) or "isotope")}
+\item{scope}{the interpretation scope to align with (typically "climate" (default) or "isotope"). See [interpDirectionSign()].}
 }
 \value{
 numeric vector of values of equal length to binvec

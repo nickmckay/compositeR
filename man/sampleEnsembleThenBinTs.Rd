@@ -12,6 +12,7 @@ sampleEnsembleThenBinTs(
   defaultUnc = 1.5,
   ar = sqrt(0.5),
   bamModel = list(ns = 1, name = "bernoulli", param = 0.05),
+  exactAgeArchives = c("Wood", "Documents"),
   spread = TRUE,
   spreadBy = abs(mean(diff(binvec)))/10,
   spreadMax = as.numeric(stats::quantile(abs(diff(thisAge)), probs = 0.75, na.rm = TRUE)),
@@ -35,6 +36,8 @@ sampleEnsembleThenBinTs(
 
 \item{bamModel}{a list that describes the model to use in BAM (default = list(ns = 1, name = "bernoulli", param = 0.05))}
 
+\item{exactAgeArchives}{archive types (matched case-insensitively against `ts$archiveType`) whose ages are treated as exact, so no age uncertainty is simulated for them when they have a single age vector. Defaults to tree rings ("Wood") and historical documents. Use `character(0)` to simulate age uncertainty for every record.}
+
 \item{spread}{should values be interpolated between bins? (TRUE/FALSE)}
 
 \item{spreadBy}{if newAge is not supplied, what is the desired resolution of the spread values? If NA, the minimum age gap divided by 5 will be used}
@@ -43,9 +46,9 @@ sampleEnsembleThenBinTs(
 
 \item{gaussianizeInput}{Force values to gaussian distribution before analysis (TRUE/FALSE)}
 
-\item{alignInterpDirection}{multiply values by -1 if scope_interpDirection == negative (TRUE/FALSE)}
+\item{alignInterpDirection}{multiply values by -1 if the interpretation direction is negative (TRUE/FALSE). See [interpDirectionSign()].}
 
-\item{scope}{the scope of the project (typically "climate" (default) or "isotope")}
+\item{scope}{the interpretation scope to align with (typically "climate" (default) or "isotope"). See [interpDirectionSign()].}
 }
 \value{
 numeric vector of values of equal length to binvec

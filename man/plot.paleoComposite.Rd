@@ -7,7 +7,7 @@
 \method{plot}{paleoComposite}(x, ...)
 }
 \arguments{
-\item{x}{The output of compositeEnsembles2()}
+\item{x}{The output of compositeEnsembles()}
 
 \item{...}{additional parameters (see plotComposite)}
 }

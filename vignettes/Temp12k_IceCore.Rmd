@@ -157,7 +157,7 @@ ggplot(fTS_df_standardized, aes(x = age, y = paleoData_values, color = factor(re
   scale_x_reverse(limits=c(12000,0))
 ```
 
-**All of the necessary parameters can be applied in one function using the compositeEnsembles() function which will produce the same results with less code**
+**All of the necessary parameters can be applied in one function using the compositeEnsembles() function which will produce the same results with less code.** Because simpleBinTs() adds no uncertainty, one ensemble member (`nens = 1`) is enough here.
 
 Several additional defaults for the temp12k analysis (such as compositeSCC()) apply specific preset parameters to the compositeEnsembles() function. 
 
@@ -165,6 +165,8 @@ Several additional defaults for the temp12k analysis (such as compositeSCC()) ap
 #All of these steps can be applies useing wrapper function
 composite <- compositeEnsembles(fTS,
                                 binvec=binvec,
+                                nens=1,
+                                verbose=FALSE,
                                 binFun=simpleBinTs,
                                 stanFun=standardizeOverInterval,
                                 normalizeVariance=FALSE,
@@ -174,7 +176,7 @@ composite <- compositeEnsembles(fTS,
 #Plot the comparison between this wrapper function with composite mean
 ggplot(fTS_df_standardized, aes(x = age, y = paleoData_values, color = factor(record))) +
   geom_line(data=data.frame(x=binAges,y=compMean),aes(x=binAges,y=y),color='black',size=1)+
-  geom_point(data=data.frame(x=binAges,y=composite$composite),aes(x=binAges,y=y),color='red',size=1)+
+  geom_point(data=data.frame(x=binAges,y=composite$composite[[1]]),aes(x=binAges,y=y),color='red',size=1)+
   labs(title = "Comparison between compositeEnsembles() with step by step analysis", x = "age (yr BP)", y = "temperature (degC)", color = "record") +
   theme_bw() +
   scale_x_reverse(limits=c(12000,0))
@@ -187,7 +189,7 @@ ggplot(fTS_df_standardized, aes(x = age, y = paleoData_values, color = factor(re
 nens <- 50
 
 #Ensemble composite using "all-in-one" wrapper function
-ensOut <- compositeEnsembles2(fTS,
+ensOut <- compositeEnsembles(fTS,
                                 binvec=binvec,
                                 binFun=sampleEnsembleThenBinTs,
                                 stanFun=standardizeOverInterval,

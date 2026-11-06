@@ -2,48 +2,66 @@
 % Please edit documentation in R/composite.R
 \name{compositeEnsembles}
 \alias{compositeEnsembles}
-\title{Composite with uncertainty}
+\title{Composite ensembles}
 \usage{
 compositeEnsembles(
   fTS,
   binvec,
-  spread = TRUE,
-  stanFun = standardizeMeanIteratively,
+  nens = 100,
+  stanFun = standardizeOverRandomInterval,
   ageVar = "age",
+  uncVar = NA,
+  weights = NA,
+  samplePct = 1,
+  scale = FALSE,
+  spread = TRUE,
   gaussianizeInput = FALSE,
   alignInterpDirection = TRUE,
   scope = "climate",
   binFun = sampleEnsembleThenBinTs,
+  verbose = TRUE,
   ...
 )
 }
 \arguments{
-\item{fTS}{TS object of the timeseries that you want to composite}
+\item{fTS}{the timeseries to composite: a lipdR TS list (from `lipdR::extractTs()`), or a timeseries tibble/data frame with one row per timeseries (from `lipdR::ts2tibble()`, or any data frame with list columns for the age and paleoData_values)}
 
-\item{binvec}{A vector of bin edges for binning}
+\item{binvec}{A vector that describes the edges of the bins to bin to}
 
-\item{spread}{An option to spread values over adjacent empty years (if TRUE, spreadPaleoData() is used by binFun)}
+\item{nens}{the number of ensembles to create}
 
-\item{stanFun}{Function to use for standardization}
+\item{stanFun}{function to use for standardization (either standardizeOverRandomInterval, standardizeMeanIteratively, or standardizeOverInterval)}
 
-\item{ageVar}{Name of the time vector in fTS}
+\item{ageVar}{age variable to use}
 
-\item{gaussianizeInput}{Optionally gaussianize input before compositing}
+\item{uncVar}{uncertainty variable  \cr - Use a string to identify a fTS variable name or use a number to provide a uniform value to all records.  \cr - This is used if stanFun == sampleEnsembleThenBinTs but not for simpleBinTs.}
 
-\item{alignInterpDirection}{Optionally invert timeseries with negative interpretation_direction}
+\item{weights}{weights for calculating the composite mean. \cr - For example, you may want to weight each record in a region relative to the number of total records from a single site.  \cr - Use a string to identify a fTS variable name, otherwise all values will be weighted equally.}
 
-\item{scope}{interpretation_scope for alignInterpDirection (default = 'climate')}
+\item{samplePct}{the percent of records to used for each ensemble.  \cr - If length(fTS)*samplePct <= 3, this is ignored.  \cr - Default = 1 which means that 100 percent of records are used for each ensemble}
 
-\item{binFun}{Function to use for binning}
+\item{scale}{scale each composite ensemble member to have a mean of zero and unit variance at the end of the compiting}
 
-\item{...}{parameters to pass to stanFun}
+\item{spread}{"Spread" data before binning to prevent aliasing of bins (default = TRUE)}
+
+\item{gaussianizeInput}{"Gaussianize" the data before compositing to avoid impacts of irregularly distributed data (default = TRUE)}
+
+\item{alignInterpDirection}{multiply each record by -1 if its interpretation direction is negative, so that all records point the same way (see [interpDirectionSign()])}
+
+\item{scope}{which interpretation scope to align with (default "climate"). Interpretations without a scope are used if none match. NA uses the first interpretation with a direction.}
+
+\item{binFun}{function to use for binning (either sampleEnsembleThenBinTs or simpleBinTS)}
+
+\item{verbose}{should a progress bar be printed?}
+
+\item{...}{additional options to pass to stanFun}
 }
 \value{
-a list. The main composite is in the list$composite matrix (needs a better definition here) TODO
+a composite list class with three tibbles:
+\cr (1) The composite [dims = length(binvec) x (nens + 1 for age column)]
+\cr (2) the standardized values [dims = length(binvec) x (length(fTS) + 1 for age column)], and
+\cr (3) a count of when proxy values are used in the compilation [same dims as 2]
 }
 \description{
-Composite with uncertainty
-}
-\seealso{
-[compositeEnsembles2()], the maintained ensemble-aware compositing function.
+Create paleoclimate composite ensembles from a set of LiPD timeseries. Written by Chris Hancock (2024) as compositeEnsembles2(); since compositeR 0.4.0 it is the main compositing function.
 }

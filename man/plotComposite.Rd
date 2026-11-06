@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotting.R
 \name{plotComposite}
 \alias{plotComposite}
-\title{A function to plot the output of compositeEnsembles2}
+\title{A function to plot the output of compositeEnsembles}
 \usage{
 plotComposite(
   compositeList,
@@ -14,7 +14,7 @@ plotComposite(
 )
 }
 \arguments{
-\item{compositeList}{The output of compositeEnsembles2()}
+\item{compositeList}{The output of compositeEnsembles()}
 
 \item{ageUnits}{units for the age variable}
 
@@ -39,5 +39,5 @@ plotComposite(
 a combined or list of gg plots
 }
 \description{
-A function to plot the output of compositeEnsembles2
+A function to plot the output of compositeEnsembles
 }
