@@ -3,6 +3,7 @@
 * `compositeEnsembles2()` is now `compositeEnsembles()`. The old name still works but warns that it is deprecated. The old single-ensemble `compositeEnsembles()`, deprecated in 0.3.0, has been removed; scripts that need it (for example the Temperature12k analysis code) should use compositeR 0.3.0.
 * `compositeEnsembles()` accepts a timeseries tibble (from `lipdR::ts2tibble()`, or any data frame with one row per timeseries) as well as a TS list.
 * `alignInterpDirection` works with current LiPD files. It used to look only for `*_interpDirection` fields, so records with `interpretation1_direction` were never flipped. The new `interpDirectionSign()` reads `interpretationN_direction` and `interpretationN_scope` (and the legacy fields), accepts positive/negative and increase/decrease in any case, and treats ambiguous values as unknown.
+* New `uncUnits` argument to `compositeEnsembles()` and `sampleEnsembleThenBinTs()`. With `uncUnits = "sd"`, a numeric uncertainty is a multiple of each record's standard deviation (e.g. `uncVar = 0.5, uncUnits = "sd"`), so records in different units no longer need rescaling first. The default, `"native"`, keeps the old behavior. Uncertainties read from the timeseries are always in native units.
 * `sampleEnsembleThenBinTs()` no longer simulates BAM age uncertainty for precisely dated archives. A new `exactAgeArchives` argument (default `c("Wood", "Documents")`) lists the archive types whose single age vector is used as is.
 
 # compositeR 0.3.0

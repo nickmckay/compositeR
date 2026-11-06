@@ -86,3 +86,29 @@ test_that("compositeEnsembles accepts a tibble of timeseries", {
                                 alignInterpDirection = FALSE, verbose = FALSE)
   expect_equal(fromTib$composite, fromList$composite)
 })
+
+test_that("uncUnits = 'sd' scales a default uncertainty by each record's SD", {
+  bv <- seq(1000, 2000, by = 50)
+  v <- 100 * sin(1:1000 / 20)
+  tr <- list(year = 1001:2000, paleoData_values = v, archiveType = "Wood")
+  set.seed(3)
+  inSd <- sampleEnsembleThenBinTs(tr, bv, ageVar = "year", defaultUnc = 0.5, uncUnits = "sd")
+  set.seed(3)
+  inNative <- sampleEnsembleThenBinTs(tr, bv, ageVar = "year", defaultUnc = 0.5 * sd(v))
+  expect_equal(inSd, inNative)
+  # measured uncertainties stay in native units
+  tr$paleoData_uncertainty1sd <- 2
+  set.seed(3)
+  a <- sampleEnsembleThenBinTs(tr, bv, ageVar = "year", defaultUnc = 0.5, uncUnits = "sd")
+  set.seed(3)
+  b <- sampleEnsembleThenBinTs(tr, bv, ageVar = "year", defaultUnc = 0.5)
+  expect_equal(a, b)
+})
+
+test_that("compositeEnsembles rejects uncUnits = 'sd' with a named uncVar", {
+  fTS <- list(list(paleoData_TSid = "a", age = 1:100, paleoData_values = rnorm(100)))
+  expect_error(compositeEnsembles(fTS, seq(0, 100, by = 10), nens = 1,
+                                  uncVar = "paleoData_uncertainty1sd", uncUnits = "sd",
+                                  verbose = FALSE),
+               "numeric uncVar")
+})

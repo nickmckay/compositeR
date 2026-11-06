@@ -11,6 +11,7 @@ compositeEnsembles(
   stanFun = standardizeOverRandomInterval,
   ageVar = "age",
   uncVar = NA,
+  uncUnits = c("native", "sd"),
   weights = NA,
   samplePct = 1,
   scale = FALSE,
@@ -34,7 +35,9 @@ compositeEnsembles(
 
 \item{ageVar}{age variable to use}
 
-\item{uncVar}{uncertainty variable  \cr - Use a string to identify a fTS variable name or use a number to provide a uniform value to all records.  \cr - This is used if stanFun == sampleEnsembleThenBinTs but not for simpleBinTs.}
+\item{uncVar}{uncertainty variable  \cr - Use a string to identify a fTS variable name or use a number to provide a uniform value to all records.  \cr - This is used if binFun == sampleEnsembleThenBinTs but not for simpleBinTs.}
+
+\item{uncUnits}{units of a numeric `uncVar`: "native" (default) for each record's own units, or "sd" for multiples of each record's standard deviation (e.g. `uncVar = 0.5, uncUnits = "sd"` gives every record noise with half its SD). Must be "native" when `uncVar` names a variable, since those are measured uncertainties.}
 
 \item{weights}{weights for calculating the composite mean. \cr - For example, you may want to weight each record in a region relative to the number of total records from a single site.  \cr - Use a string to identify a fTS variable name, otherwise all values will be weighted equally.}
 

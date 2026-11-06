@@ -200,7 +200,8 @@ simpleBinTs <- function(ts,
 #'
 #' @inheritParams simpleBinTs
 #' @param uncVar specify the name the uncertainty variable
-#' @param defaultUnc a uncertainty to use if uncVar is NULL (default = 1.5 paleoData_units)
+#' @param defaultUnc a uncertainty to use if uncVar is NULL (default = 1.5, in the units given by `uncUnits`)
+#' @param uncUnits units of `defaultUnc`: "native" (default) for the record's own units (paleoData_units), or "sd" for multiples of the record's standard deviation, so that `defaultUnc = 0.5` adds noise with half the record's SD whatever its units. Uncertainties read from the timeseries (`uncVar`) are measured values and are always in native units.
 #' @param ar Autocorrelation coefficient to use for modelling uncertainty on paleoData, what fraction of the uncertainties are autocorrelated? (default = sqrt(0.5); or 50 percent autocorrelated uncertainty)
 #' @param bamModel a list that describes the model to use in BAM (default = list(ns = 1, name = "bernoulli", param = 0.05))
 #' @param exactAgeArchives archive types (matched case-insensitively against `ts$archiveType`) whose ages are treated as exact, so no age uncertainty is simulated for them when they have a single age vector. Defaults to tree rings ("Wood") and historical documents. Use `character(0)` to simulate age uncertainty for every record.
@@ -212,6 +213,7 @@ sampleEnsembleThenBinTs <- function(ts,
                                     ageVar = "age",
                                     uncVar = "paleoData_uncertainty1sd",
                                     defaultUnc = 1.5,
+                                    uncUnits = c("native", "sd"),
                                     ar = sqrt(0.5),
                                     bamModel = list(ns = 1, name = "bernoulli", param = 0.05),
                                     exactAgeArchives = c("Wood", "Documents"),
@@ -239,8 +241,10 @@ sampleEnsembleThenBinTs <- function(ts,
   if(NCOL(ts$paleoData_values) > 1){#draw from ensemble
     thisPdv <- ts$paleoData_values[ , sample.int(NCOL(ts$paleoData_values),size = 1)]
   }else{ #simulate uncertainty from number
-    if(!is.null(ts[[uncVar]])){
+    if(!is.null(ts[[uncVar]])){#measured uncertainty, in the record's units
       tu <- as.numeric(ts[[uncVar]])
+    }else if(match.arg(uncUnits) == "sd"){#default uncertainty, in standard deviations of the record
+      tu <- defaultUnc * stats::sd(ts$paleoData_values, na.rm = TRUE)
     }else{
       tu <- defaultUnc
     }

@@ -10,6 +10,7 @@ sampleEnsembleThenBinTs(
   ageVar = "age",
   uncVar = "paleoData_uncertainty1sd",
   defaultUnc = 1.5,
+  uncUnits = c("native", "sd"),
   ar = sqrt(0.5),
   bamModel = list(ns = 1, name = "bernoulli", param = 0.05),
   exactAgeArchives = c("Wood", "Documents"),
@@ -30,7 +31,9 @@ sampleEnsembleThenBinTs(
 
 \item{uncVar}{specify the name the uncertainty variable}
 
-\item{defaultUnc}{a uncertainty to use if uncVar is NULL (default = 1.5 paleoData_units)}
+\item{defaultUnc}{a uncertainty to use if uncVar is NULL (default = 1.5, in the units given by `uncUnits`)}
+
+\item{uncUnits}{units of `defaultUnc`: "native" (default) for the record's own units (paleoData_units), or "sd" for multiples of the record's standard deviation, so that `defaultUnc = 0.5` adds noise with half the record's SD whatever its units. Uncertainties read from the timeseries (`uncVar`) are measured values and are always in native units.}
 
 \item{ar}{Autocorrelation coefficient to use for modelling uncertainty on paleoData, what fraction of the uncertainties are autocorrelated? (default = sqrt(0.5); or 50 percent autocorrelated uncertainty)}
 

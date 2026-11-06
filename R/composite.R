@@ -29,7 +29,8 @@ asTsList <- function(fTS){
 #' @param nens the number of ensembles to create
 #' @param stanFun function to use for standardization (either standardizeOverRandomInterval, standardizeMeanIteratively, or standardizeOverInterval)
 #' @param binFun function to use for binning (either sampleEnsembleThenBinTs or simpleBinTS)
-#' @param uncVar uncertainty variable  \cr - Use a string to identify a fTS variable name or use a number to provide a uniform value to all records.  \cr - This is used if stanFun == sampleEnsembleThenBinTs but not for simpleBinTs.
+#' @param uncVar uncertainty variable  \cr - Use a string to identify a fTS variable name or use a number to provide a uniform value to all records.  \cr - This is used if binFun == sampleEnsembleThenBinTs but not for simpleBinTs.
+#' @param uncUnits units of a numeric `uncVar`: "native" (default) for each record's own units, or "sd" for multiples of each record's standard deviation (e.g. `uncVar = 0.5, uncUnits = "sd"` gives every record noise with half its SD). Must be "native" when `uncVar` names a variable, since those are measured uncertainties.
 #' @param weights weights for calculating the composite mean. \cr - For example, you may want to weight each record in a region relative to the number of total records from a single site.  \cr - Use a string to identify a fTS variable name, otherwise all values will be weighted equally.
 #' @param samplePct the percent of records to used for each ensemble.  \cr - If length(fTS)*samplePct <= 3, this is ignored.  \cr - Default = 1 which means that 100 percent of records are used for each ensemble
 #' @param scale scale each composite ensemble member to have a mean of zero and unit variance at the end of the compiting
@@ -52,6 +53,7 @@ compositeEnsembles <- function(fTS,
                                stanFun = standardizeOverRandomInterval,
                                ageVar = "age",
                                uncVar = NA,
+                               uncUnits = c("native", "sd"),
                                weights = NA,
                                samplePct = 1,
                                scale = FALSE,
@@ -63,6 +65,10 @@ compositeEnsembles <- function(fTS,
                                verbose = TRUE,
                                ...){
   fTS <- asTsList(fTS)
+  uncUnits <- match.arg(uncUnits)
+  if(is.character(uncVar) && uncUnits == "sd"){
+    stop("uncUnits = 'sd' applies to a numeric uncVar. Uncertainties read from the timeseries ('", uncVar, "') are in the records' own units.")
+  }
 
   # Bin ages # #############################
   if(!is.numeric(binvec)){stop("binvec must be numeric")}
@@ -116,7 +122,7 @@ compositeEnsembles <- function(fTS,
         )))
     } else if (is.numeric(uncVar)){ #use a default number
       binMatR <- suppressMessages(as.matrix(purrr::map_dfc(
-        fTS, binFun, binvec, ageVar=ageVar, defaultUnc=uncVar, #defaultUnc=uncVar
+        fTS, binFun, binvec, ageVar=ageVar, defaultUnc=uncVar, uncUnits=uncUnits,
         spread=spread, gaussianizeInput=gaussianizeInput, alignInterpDirection=alignInterpDirection, scope=scope
         )))
     } else{
