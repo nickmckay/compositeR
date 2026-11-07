@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">compositeR</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.4.0</span>
       </span>
     </div>
 
@@ -99,15 +99,20 @@
 </tr></tbody></table></div>
 <div class="section level2">
 <h2 id="architecture">Architecture<a class="anchor" aria-label="anchor" href="#architecture"></a></h2>
-<p>Compositing methods are <strong>pluggable via function-parameter dispatch</strong>: <code>compositeEnsembles2(fTS, binvec, binFun = ..., stanFun = ..., ...)</code>. Custom binning (<code>simpleBinTs</code>, <code>sampleEnsembleThenBinTs</code>) or standardization (<code>standardizeOverInterval</code>, <code>standardizeOverRandomInterval</code>, <code>standardizeMeanIteratively</code>) plug in without modifying the package. Result is an S3 <code>paleoComposite</code> (a classed list of matrices) with <code>print</code>/<code>summary</code> methods — the matrix-shaped half of the family’s two-layer result convention.</p>
-<ul><li>
-<code><a href="reference/compositeEnsembles.html">compositeEnsembles()</a></code> (older single-ensemble API) is <strong>deprecated</strong>, superseded by <code><a href="reference/compositeEnsembles2.html">compositeEnsembles2()</a></code>.</li>
+<p>Compositing methods are <strong>pluggable via function-parameter dispatch</strong>: <code>compositeEnsembles(fTS, binvec, binFun = ..., stanFun = ..., ...)</code>. Custom binning (<code>simpleBinTs</code>, <code>sampleEnsembleThenBinTs</code>) or standardization (<code>standardizeOverInterval</code>, <code>standardizeOverRandomInterval</code>, <code>standardizeMeanIteratively</code>) plug in without modifying the package. Result is an S3 <code>paleoComposite</code> (a classed list of matrices) with <code>print</code>/<code>summary</code> methods — the matrix-shaped half of the family’s two-layer result convention.</p>
+<ul><li>As of 0.4.0, <code><a href="reference/compositeEnsembles.html">compositeEnsembles()</a></code> is the ensemble API (formerly <code><a href="reference/compositeEnsembles2.html">compositeEnsembles2()</a></code>, now a deprecated alias). The old single-ensemble <code><a href="reference/compositeEnsembles.html">compositeEnsembles()</a></code> was removed.</li>
+<li>
+<code>fTS</code> may be a TS list, a lipd_ts_tibble, or a plain data frame (see <code><a href="reference/asTsList.html">asTsList()</a></code>).</li>
+<li>
+<code>alignInterpDirection</code> uses <code><a href="reference/interpDirectionSign.html">interpDirectionSign()</a></code>, which reads <code>interpretationN_direction</code> / <code>interpretationN_scope</code> (and legacy <code>*InterpretationN_interpDirection</code>).</li>
+<li>
+<code><a href="reference/sampleEnsembleThenBinTs.html">sampleEnsembleThenBinTs()</a></code> does not simulate BAM ages for <code>exactAgeArchives</code> (default Wood, Documents).</li>
 <li>Output exposes a correctly-spelled <code>parameters</code> element; the historical misspelling <code>paramaters</code> is kept as an identical copy for one deprecation cycle — remove it later.</li>
 </ul></div>
 <div class="section level2">
 <h2 id="gotchas">Gotchas<a class="anchor" aria-label="anchor" href="#gotchas"></a></h2>
 <ul><li>
-<strong>Golden tests</strong> (<code>tests/testthat/test-golden.R</code>, ref via <code>tools/capture_reference.R</code>) — compositeR’s first tests; lock binning/standardization/compositeEnsembles2 numerics. Mostly R-RNG-portable (no rEDM), so simpler than actR’s.</li>
+<strong>Golden tests</strong> (<code>tests/testthat/test-golden.R</code>, ref via <code>tools/capture_reference.R</code>) — compositeR’s first tests; lock binning/standardization/compositeEnsembles numerics. Mostly R-RNG-portable (no rEDM), so simpler than actR’s.</li>
 <li>Uses <code>simulateAutoCorrelatedUncertainty</code> with sd-first arg order (historical); it’s now a thin wrapper over <code><a href="https://rdrr.io/pkg/ens/man/simulateAutoCorrelatedUncertainty.html" class="external-link">ens::simulateAutoCorrelatedUncertainty</a></code> (which is n-first).</li>
 <li>CI: R CMD check on Windows/Linux/macOS with vignettes.</li>
 </ul></div>

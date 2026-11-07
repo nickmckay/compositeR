@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">compositeR</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.4.0</span>
       </span>
     </div>
 
@@ -57,6 +57,18 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="page-header" data-toc-text="0.4.0" id="compositer-040">compositeR 0.4.0<a class="anchor" aria-label="anchor" href="#compositer-040"></a></h2>
+<ul><li>
+<code><a href="../reference/compositeEnsembles2.html">compositeEnsembles2()</a></code> is now <code><a href="../reference/compositeEnsembles.html">compositeEnsembles()</a></code>. The old name still works but warns that it is deprecated. The old single-ensemble <code><a href="../reference/compositeEnsembles.html">compositeEnsembles()</a></code>, deprecated in 0.3.0, has been removed; scripts that need it (for example the Temperature12k analysis code) should use compositeR 0.3.0.</li>
+<li>
+<code><a href="../reference/compositeEnsembles.html">compositeEnsembles()</a></code> accepts a timeseries tibble (from <code><a href="https://rdrr.io/pkg/lipdR/man/ts2tibble.html" class="external-link">lipdR::ts2tibble()</a></code>, or any data frame with one row per timeseries) as well as a TS list.</li>
+<li>
+<code>alignInterpDirection</code> works with current LiPD files. It used to look only for <code>*_interpDirection</code> fields, so records with <code>interpretation1_direction</code> were never flipped. The new <code><a href="../reference/interpDirectionSign.html">interpDirectionSign()</a></code> reads <code>interpretationN_direction</code> and <code>interpretationN_scope</code> (and the legacy fields), accepts positive/negative and increase/decrease in any case, and treats ambiguous values as unknown.</li>
+<li>New <code>uncUnits</code> argument to <code><a href="../reference/compositeEnsembles.html">compositeEnsembles()</a></code> and <code><a href="../reference/sampleEnsembleThenBinTs.html">sampleEnsembleThenBinTs()</a></code>. With <code>uncUnits = "sd"</code>, a numeric uncertainty is a multiple of each record’s standard deviation (e.g. <code>uncVar = 0.5, uncUnits = "sd"</code>), so records in different units no longer need rescaling first. The default, <code>"native"</code>, keeps the old behavior. Uncertainties read from the timeseries are always in native units.</li>
+<li>
+<code><a href="../reference/sampleEnsembleThenBinTs.html">sampleEnsembleThenBinTs()</a></code> no longer simulates BAM age uncertainty for precisely dated archives. A new <code>exactAgeArchives</code> argument (default <code>c("Wood", "Documents")</code>) lists the archive types whose single age vector is used as is.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="0.3.0" id="compositer-030">compositeR 0.3.0<a class="anchor" aria-label="anchor" href="#compositer-030"></a></h2>
 <ul><li>compositeR now builds on ens and lipdViz instead of the geoChronR monolith, so age modeling software is no longer installed with it.</li>
