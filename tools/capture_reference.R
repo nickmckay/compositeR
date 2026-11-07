@@ -45,13 +45,13 @@ ref$rmse <- recordRMSE(td = ref$stanInterval, palMat = pdm)
 
 # 4. end-to-end composites (small nens for speed)
 set.seed(20)
-ref$compositeSCC <- compositeEnsembles2(fTS, binvec, nens = 5,
+ref$compositeSCC <- compositeEnsembles(fTS, binvec, nens = 5,
                                         stanFun = standardizeOverInterval,
                                         interval = c(2000, 6000),
                                         binFun = simpleBinTs,
                                         verbose = FALSE)
 set.seed(21)
-ref$compositeDCC <- compositeEnsembles2(fTS, binvec, nens = 5,
+ref$compositeDCC <- compositeEnsembles(fTS, binvec, nens = 5,
                                         stanFun = standardizeOverRandomInterval,
                                         duration = 3000,
                                         searchRange = c(0, 9000),

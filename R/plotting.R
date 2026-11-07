@@ -2,7 +2,7 @@
 
 #' Plot an compoite ensemble
 #'
-#' @param x The output of compositeEnsembles2()
+#' @param x The output of compositeEnsembles()
 #' @param ... additional parameters (see plotComposite)
 #'
 #' @return a ggplot2 object
@@ -17,7 +17,7 @@ plot.paleoComposite <- function(x,...){
 
 
 #
-#' A function to plot the output of compositeEnsembles2
+#' A function to plot the output of compositeEnsembles
 #'
 #' @import ggplot2
 #' @import dplyr
@@ -25,7 +25,7 @@ plot.paleoComposite <- function(x,...){
 #' @importFrom lipdViz plotTimeseriesEnsRibbons
 #' @importFrom egg ggarrange
 #'
-#' @param compositeList The output of compositeEnsembles2()
+#' @param compositeList The output of compositeEnsembles()
 #' @param ageUnits units for the age variable
 #' @param valUnits units for the composite (default = standardized)
 #' @param title a title for the combined plot (not used if combine == FALSE)
@@ -93,7 +93,7 @@ print.paleoComposite <- function(x,...){
 #' underlying object keeps its full ensemble matrices; this gives a compact
 #' tabular view.
 #'
-#' @param object a paleoComposite (output of compositeEnsembles2())
+#' @param object a paleoComposite (output of compositeEnsembles())
 #' @param probs quantiles of the composite ensemble to report (default 0.025, 0.5, 0.975)
 #' @param ... unused
 #' @importFrom stats quantile
@@ -110,12 +110,12 @@ summary.paleoComposite <- function(object, probs = c(0.025, 0.5, 0.975), ...){
 }
 
 
-#' Print compositeEnsembles2() output
+#' Print compositeEnsembles() output
 #' @importFrom stats median
 #' @importFrom glue glue
 #' @import dplyr
 #'
-#' @param compositeList The output of compositeEnsembles2()
+#' @param compositeList The output of compositeEnsembles()
 #' @export
 printComposite <- function(compositeList){ #com params.to.print = c("cpt.fun","minimum.segment.length","method","penalty","ncpts.max")){
   #

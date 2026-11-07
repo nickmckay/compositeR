@@ -21,21 +21,26 @@ Repo: nickmckay/compositeR. Branch: `master`.
 ## Architecture
 
 Compositing methods are **pluggable via function-parameter dispatch**:
-`compositeEnsembles2(fTS, binvec, binFun = ..., stanFun = ..., ...)`. Custom binning
+`compositeEnsembles(fTS, binvec, binFun = ..., stanFun = ..., ...)`. Custom binning
 (`simpleBinTs`, `sampleEnsembleThenBinTs`) or standardization (`standardizeOverInterval`,
 `standardizeOverRandomInterval`, `standardizeMeanIteratively`) plug in without modifying the
 package. Result is an S3 `paleoComposite` (a classed list of matrices) with `print`/`summary`
 methods — the matrix-shaped half of the family's two-layer result convention.
 
-- `compositeEnsembles()` (older single-ensemble API) is **deprecated**, superseded by
-  `compositeEnsembles2()`.
+- As of 0.4.0, `compositeEnsembles()` is the ensemble API (formerly `compositeEnsembles2()`,
+  now a deprecated alias). The old single-ensemble `compositeEnsembles()` was removed.
+- `fTS` may be a TS list, a lipd_ts_tibble, or a plain data frame (see `asTsList()`).
+- `alignInterpDirection` uses `interpDirectionSign()`, which reads `interpretationN_direction`
+  / `interpretationN_scope` (and legacy `*InterpretationN_interpDirection`).
+- `sampleEnsembleThenBinTs()` does not simulate BAM ages for `exactAgeArchives`
+  (default Wood, Documents).
 - Output exposes a correctly-spelled `parameters` element; the historical misspelling
   `paramaters` is kept as an identical copy for one deprecation cycle — remove it later.
 
 ## Gotchas
 
 - **Golden tests** (`tests/testthat/test-golden.R`, ref via `tools/capture_reference.R`) —
-  compositeR's first tests; lock binning/standardization/compositeEnsembles2 numerics.
+  compositeR's first tests; lock binning/standardization/compositeEnsembles numerics.
   Mostly R-RNG-portable (no rEDM), so simpler than actR's.
 - Uses `simulateAutoCorrelatedUncertainty` with sd-first arg order (historical); it's now a
   thin wrapper over `ens::simulateAutoCorrelatedUncertainty` (which is n-first).

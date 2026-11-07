@@ -10,8 +10,10 @@ sampleEnsembleThenBinTs(
   ageVar = "age",
   uncVar = "paleoData_uncertainty1sd",
   defaultUnc = 1.5,
+  uncUnits = c("native", "sd"),
   ar = sqrt(0.5),
   bamModel = list(ns = 1, name = "bernoulli", param = 0.05),
+  exactAgeArchives = c("Wood", "Documents"),
   spread = TRUE,
   spreadBy = abs(mean(diff(binvec)))/10,
   spreadMax = as.numeric(stats::quantile(abs(diff(thisAge)), probs = 0.75, na.rm = TRUE)),
@@ -29,11 +31,15 @@ sampleEnsembleThenBinTs(
 
 \item{uncVar}{specify the name the uncertainty variable}
 
-\item{defaultUnc}{a uncertainty to use if uncVar is NULL (default = 1.5 paleoData_units)}
+\item{defaultUnc}{a uncertainty to use if uncVar is NULL (default = 1.5, in the units given by `uncUnits`)}
+
+\item{uncUnits}{units of `defaultUnc`: "native" (default) for the record's own units (paleoData_units), or "sd" for multiples of the record's standard deviation, so that `defaultUnc = 0.5` adds noise with half the record's SD whatever its units. Uncertainties read from the timeseries (`uncVar`) are measured values and are always in native units.}
 
 \item{ar}{Autocorrelation coefficient to use for modelling uncertainty on paleoData, what fraction of the uncertainties are autocorrelated? (default = sqrt(0.5); or 50 percent autocorrelated uncertainty)}
 
 \item{bamModel}{a list that describes the model to use in BAM (default = list(ns = 1, name = "bernoulli", param = 0.05))}
+
+\item{exactAgeArchives}{archive types (matched case-insensitively against `ts$archiveType`) whose ages are treated as exact, so no age uncertainty is simulated for them when they have a single age vector. Defaults to tree rings ("Wood") and historical documents. Use `character(0)` to simulate age uncertainty for every record.}
 
 \item{spread}{should values be interpolated between bins? (TRUE/FALSE)}
 
@@ -43,9 +49,9 @@ sampleEnsembleThenBinTs(
 
 \item{gaussianizeInput}{Force values to gaussian distribution before analysis (TRUE/FALSE)}
 
-\item{alignInterpDirection}{multiply values by -1 if scope_interpDirection == negative (TRUE/FALSE)}
+\item{alignInterpDirection}{multiply values by -1 if the interpretation direction is negative (TRUE/FALSE). See [interpDirectionSign()].}
 
-\item{scope}{the scope of the project (typically "climate" (default) or "isotope")}
+\item{scope}{the interpretation scope to align with (typically "climate" (default) or "isotope"). See [interpDirectionSign()].}
 }
 \value{
 numeric vector of values of equal length to binvec

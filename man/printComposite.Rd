@@ -2,13 +2,13 @@
 % Please edit documentation in R/plotting.R
 \name{printComposite}
 \alias{printComposite}
-\title{Print compositeEnsembles2() output}
+\title{Print compositeEnsembles() output}
 \usage{
 printComposite(compositeList)
 }
 \arguments{
-\item{compositeList}{The output of compositeEnsembles2()}
+\item{compositeList}{The output of compositeEnsembles()}
 }
 \description{
-Print compositeEnsembles2() output
+Print compositeEnsembles() output
 }

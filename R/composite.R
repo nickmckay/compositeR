@@ -1,86 +1,44 @@
-#
-#' Composite with uncertainty
+#' Convert timeseries input to a lipdR TS list
 #'
-#' @param fTS TS object of the timeseries that you want to composite
-#' @param binvec A vector of bin edges for binning
-#' @param spread An option to spread values over adjacent empty years (if TRUE, spreadPaleoData() is used by binFun)
-#' @param stanFun Function to use for standardization
-#' @param ageVar Name of the time vector in fTS
-#' @param gaussianizeInput Optionally gaussianize input before compositing
-#' @param alignInterpDirection Optionally invert timeseries with negative interpretation_direction
-#' @param scope interpretation_scope for alignInterpDirection (default = 'climate')
-#' @param binFun Function to use for binning
-#' @param ... parameters to pass to stanFun
+#' compositeR functions work on a list with one element per timeseries. This
+#' accepts that, or a lipdR timeseries tibble (`lipdR::ts2tibble()`), or any
+#' data frame with one row per timeseries.
 #'
-#' @importFrom magrittr %>%
-#'
-#' @return a list. The main composite is in the list$composite matrix (needs a better definition here) TODO
-#' @seealso [compositeEnsembles2()], the maintained ensemble-aware compositing function.
-#' @export
-compositeEnsembles <- function(fTS,
-                               binvec,
-                               spread = TRUE,
-                               stanFun = standardizeMeanIteratively,
-                               ageVar = "age",
-                               gaussianizeInput = FALSE,
-                               alignInterpDirection = TRUE,
-                               scope = "climate",
-                               binFun = sampleEnsembleThenBinTs,
-                               ...){
-
-  #compositeEnsembles2() supersedes this single-ensemble API; warn once per session
-  if(is.null(getOption("compositeR.compositeEnsembles.deprecated"))){
-    warning("compositeEnsembles() is superseded by compositeEnsembles2(), which returns a full ensemble of composites. compositeEnsembles() will be removed in a future release.")
-    options(compositeR.compositeEnsembles.deprecated = TRUE)
+#' @param fTS a TS list, lipd_ts_tibble, or data frame
+#' @return a TS list
+#' @keywords internal
+asTsList <- function(fTS){
+  if(inherits(fTS, "lipd_ts_tibble")){
+    return(lipdR::as.lipdTs(fTS))
   }
-
-  binAges <- rowMeans(cbind(binvec[-1],binvec[-length(binvec)]))
-
-  #Align paleodata ages to common binstep
-  binMatR <- as.matrix(purrr::map_dfc(fTS,
-                                      binFun,
-                                      binvec,
-                                      ageVar = ageVar,
-                                      spread = spread,
-                                      gaussianizeInput = gaussianizeInput,
-                                      alignInterpDirection = alignInterpDirection,
-                                      scope = scope))
-  binMatR[is.nan(binMatR)] <- NA
-
-  #Compute composites
-  compMat <- stanFun(ages = binAges,pdm = binMatR,...)
-  #Format output
-  #which records contributed?
-  gm <- is.finite(compMat)
-  comp <- rowMeans(compMat,na.rm = TRUE)
-  count <- colSums(gm)
-  contributed <- which(count > 0)
-  timeCount <- rowSums(gm)
-  #Return output
-  return(list(composite = comp, count = count, contributed = contributed,timeCount = timeCount))
+  if(is.data.frame(fTS)){
+    return(purrr::transpose(as.list(fTS)))
+  }
+  fTS
 }
 
-
-
 #'
-#' create paleoclimate composite ensembles from a list of LiPD timeseries. A revised version of compositeEnsembles by Chris Hancock (2024)
+#' Composite ensembles
+#'
+#' Create paleoclimate composite ensembles from a set of LiPD timeseries. Written by Chris Hancock (2024) as compositeEnsembles2(); since compositeR 0.4.0 it is the main compositing function.
 #'
 #' @import dplyr
 #'
-#' @param fTS TS list of the timeseries that you want to composite
+#' @param fTS the timeseries to composite: a lipdR TS list (from `lipdR::extractTs()`), or a timeseries tibble/data frame with one row per timeseries (from `lipdR::ts2tibble()`, or any data frame with list columns for the age and paleoData_values)
 #' @param binvec A vector that describes the edges of the bins to bin to
 #' @param nens the number of ensembles to create
 #' @param stanFun function to use for standardization (either standardizeOverRandomInterval, standardizeMeanIteratively, or standardizeOverInterval)
 #' @param binFun function to use for binning (either sampleEnsembleThenBinTs or simpleBinTS)
-#' @param uncVar uncertainty variable  \cr - Use a string to identify a fTS variable name or use a number to provide a uniform value to all records.  \cr - This is used if stanFun == sampleEnsembleThenBinTs but not for simpleBinTs.
+#' @param uncVar uncertainty variable  \cr - Use a string to identify a fTS variable name or use a number to provide a uniform value to all records.  \cr - This is used if binFun == sampleEnsembleThenBinTs but not for simpleBinTs.
+#' @param uncUnits units of a numeric `uncVar`: "native" (default) for each record's own units, or "sd" for multiples of each record's standard deviation (e.g. `uncVar = 0.5, uncUnits = "sd"` gives every record noise with half its SD). Must be "native" when `uncVar` names a variable, since those are measured uncertainties.
 #' @param weights weights for calculating the composite mean. \cr - For example, you may want to weight each record in a region relative to the number of total records from a single site.  \cr - Use a string to identify a fTS variable name, otherwise all values will be weighted equally.
 #' @param samplePct the percent of records to used for each ensemble.  \cr - If length(fTS)*samplePct <= 3, this is ignored.  \cr - Default = 1 which means that 100 percent of records are used for each ensemble
 #' @param scale scale each composite ensemble member to have a mean of zero and unit variance at the end of the compiting
 #' @param ageVar age variable to use
 #' @param spread "Spread" data before binning to prevent aliasing of bins (default = TRUE)
 #' @param gaussianizeInput "Gaussianize" the data before compositing to avoid impacts of irregularly distributed data (default = TRUE)
-#' @param alignInterpDirection align data by interpretation direction
-#' @param scope which scope of interpretation to use
+#' @param alignInterpDirection multiply each record by -1 if its interpretation direction is negative, so that all records point the same way (see [interpDirectionSign()])
+#' @param scope which interpretation scope to align with (default "climate"). Interpretations without a scope are used if none match. NA uses the first interpretation with a direction.
 #' @param ... additional options to pass to stanFun
 #' @param verbose should a progress bar be printed?
 #'
@@ -89,22 +47,29 @@ compositeEnsembles <- function(fTS,
 #' \cr (2) the standardized values [dims = length(binvec) x (length(fTS) + 1 for age column)], and
 #' \cr (3) a count of when proxy values are used in the compilation [same dims as 2]
 #' @export
-compositeEnsembles2 <- function(fTS,
-                                binvec,
-                                nens = 100,
-                                stanFun = standardizeOverRandomInterval,
-                                ageVar = "age",
-                                uncVar = NA,
-                                weights = NA,
-                                samplePct = 1,
-                                scale = FALSE,
-                                spread = TRUE,
-                                gaussianizeInput = FALSE,
-                                alignInterpDirection = TRUE,
-                                scope = "climate",
-                                binFun = sampleEnsembleThenBinTs,
-                                verbose = TRUE,
-                                ...){
+compositeEnsembles <- function(fTS,
+                               binvec,
+                               nens = 100,
+                               stanFun = standardizeOverRandomInterval,
+                               ageVar = "age",
+                               uncVar = NA,
+                               uncUnits = c("native", "sd"),
+                               weights = NA,
+                               samplePct = 1,
+                               scale = FALSE,
+                               spread = TRUE,
+                               gaussianizeInput = FALSE,
+                               alignInterpDirection = TRUE,
+                               scope = "climate",
+                               binFun = sampleEnsembleThenBinTs,
+                               verbose = TRUE,
+                               ...){
+  fTS <- asTsList(fTS)
+  uncUnits <- match.arg(uncUnits)
+  if(is.character(uncVar) && uncUnits == "sd"){
+    stop("uncUnits = 'sd' applies to a numeric uncVar. Uncertainties read from the timeseries ('", uncVar, "') are in the records' own units.")
+  }
+
   # Bin ages # #############################
   if(!is.numeric(binvec)){stop("binvec must be numeric")}
   binvec <- sort(binvec)
@@ -118,11 +83,14 @@ compositeEnsembles2 <- function(fTS,
   }
   # binvec
   if(sum(stats::median(diff(binvec)) != diff(binvec)) > 0){warning("binvec has uneven spacing. This vector should be created using seq(ageMin,ageMax,binsize")}
-  # alignInter
+  # alignInterpDirection
   if (alignInterpDirection){
-    likelyname <- paste0(scope,"Interpretation1_interpDirection")
-    if(sum(is.na(lipdR::pullTsVariable(fTS,likelyname)))>1){warning(paste0("Warning with alignInterpDirection and scope. Variable name '",likelyname,"' not found for fTS[ c(",paste(which(is.na(lipdR::pullTsVariable(fTS,likelyname))),collapse=', '),")]"))}
-    if (sum(!(tolower(unique(lipdR::pullTsVariable(fTS,likelyname))) %in% c("positive","negative",-1,1,NA)))>0){ warning(paste0("Unexpected ",likelyname," found in fTS. This value should be positive/negative or 1/-1"))}
+    signs <- vapply(fTS, interpDirectionSign, numeric(1), scope = scope)
+    if(any(is.na(signs))){
+      warning(paste0("alignInterpDirection: no usable ", ifelse(is.na(scope), "", paste0("'", scope, "' ")),
+                     "interpretation direction for fTS[c(", paste(which(is.na(signs)), collapse = ", "),
+                     ")]. These records are not flipped."))
+    }
   }
 
   # weights
@@ -154,7 +122,7 @@ compositeEnsembles2 <- function(fTS,
         )))
     } else if (is.numeric(uncVar)){ #use a default number
       binMatR <- suppressMessages(as.matrix(purrr::map_dfc(
-        fTS, binFun, binvec, ageVar=ageVar, defaultUnc=uncVar, #defaultUnc=uncVar
+        fTS, binFun, binvec, ageVar=ageVar, defaultUnc=uncVar, uncUnits=uncUnits,
         spread=spread, gaussianizeInput=gaussianizeInput, alignInterpDirection=alignInterpDirection, scope=scope
         )))
     } else{
@@ -199,7 +167,7 @@ compositeEnsembles2 <- function(fTS,
   proxyMat <- stan_df %>%
     dplyr::select(-iteration) %>%
     dplyr::group_by(age) %>%
-    dplyr::summarize(dplyr::across(dplyr::everything(), mean, na.rm=T)) %>%
+    dplyr::summarize(dplyr::across(dplyr::everything(), \(x) mean(x, na.rm = TRUE))) %>%
     stats::setNames(c('age',lipdR::pullTsVariable(fTS,'paleoData_TSid')))
   # Count of proxy values used at each time
   proxyPctUsed <-data.frame(age=stan_df$age,!is.na(stan_df %>% dplyr::select(.,-c(age,iteration)))) %>%
@@ -238,4 +206,21 @@ compositeEnsembles2 <- function(fTS,
 new_composite <- function(x = list()) {
   stopifnot(is.list(x))
   structure(x,class = c("paleoComposite",class(list())))
+}
+
+
+#' compositeEnsembles2 (deprecated)
+#'
+#' Renamed to [compositeEnsembles()] in compositeR 0.4.0. This alias calls it
+#' with the same arguments, and will be removed in a future release.
+#'
+#' @param ... arguments passed to [compositeEnsembles()]
+#' @return see [compositeEnsembles()]
+#' @export
+compositeEnsembles2 <- function(...){
+  if(is.null(getOption("compositeR.compositeEnsembles2.deprecated"))){
+    warning("compositeEnsembles2() has been renamed compositeEnsembles(). The old name will be removed in a future release.")
+    options(compositeR.compositeEnsembles2.deprecated = TRUE)
+  }
+  compositeEnsembles(...)
 }

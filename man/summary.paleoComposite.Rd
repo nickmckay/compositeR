@@ -7,7 +7,7 @@
 \method{summary}{paleoComposite}(object, probs = c(0.025, 0.5, 0.975), ...)
 }
 \arguments{
-\item{object}{a paleoComposite (output of compositeEnsembles2())}
+\item{object}{a paleoComposite (output of compositeEnsembles())}
 
 \item{probs}{quantiles of the composite ensemble to report (default 0.025, 0.5, 0.975)}
 

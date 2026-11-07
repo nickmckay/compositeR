@@ -124,7 +124,7 @@ ourCompositer <- function(cellnum,toComp,binvec){
   }else{
   
   tc <- as.lipdTs(thisTS) |> splitInterpretationByScope()
-  ensOut <- compositeEnsembles2(tc,
+  ensOut <- compositeEnsembles(tc,
                                 binvec=binvec,
                                 ageVar = "year",
                                 binFun=sampleEnsembleThenBinTs,
