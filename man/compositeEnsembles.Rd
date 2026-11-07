@@ -9,7 +9,8 @@ compositeEnsembles(
   binvec,
   nens = 100,
   stanFun = standardizeOverRandomInterval,
-  ageVar = "age",
+  ageVar = "time",
+  timeUnits = "yr BP",
   uncVar = NA,
   uncUnits = c("native", "sd"),
   weights = NA,
@@ -33,7 +34,9 @@ compositeEnsembles(
 
 \item{stanFun}{function to use for standardization (either standardizeOverRandomInterval, standardizeMeanIteratively, or standardizeOverInterval)}
 
-\item{ageVar}{age variable to use}
+\item{ageVar}{the time variable to composite on. The default, "time", uses each record's time axis converted to `timeUnits` with [lipdR::getTsTime()], so records in year CE, yr BP or ka can be composited together, and an age ensemble (`ageEnsemble`) is used when a record has one. Any other name (e.g. "age" or "ageEnsemble") is used as it is, without conversion, as before compositeR 0.5.0.}
+
+\item{timeUnits}{the time scale to composite on when `ageVar = "time"` (default "yr BP"). `binvec` is in these units. Also used to label the output.}
 
 \item{uncVar}{uncertainty variable  \cr - Use a string to identify a fTS variable name or use a number to provide a uniform value to all records.  \cr - This is used if binFun == sampleEnsembleThenBinTs but not for simpleBinTs.}
 
