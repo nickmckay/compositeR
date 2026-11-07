@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">compositeR</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.4.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.5.0</span>
       </span>
     </div>
 
@@ -57,6 +57,15 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="page-header" data-toc-text="0.5.0" id="compositer-050">compositeR 0.5.0<a class="anchor" aria-label="anchor" href="#compositer-050"></a></h2>
+<ul><li>
+<code><a href="../reference/compositeEnsembles.html">compositeEnsembles()</a></code> now composites on each record’s <code>time</code> by default (<code>ageVar = "time"</code>), converted to a common scale with the new <code>timeUnits</code> argument (default <code>"yr BP"</code>). It uses the time metadata that lipdR 0.7 adds in <code><a href="https://rdrr.io/pkg/lipdR/man/extractTs.html" class="external-link">extractTs()</a></code>, so records in year CE (tree rings, corals, documents), yr BP and ka can be composited together without converting them first. <code>binvec</code> is in <code>timeUnits</code>. A record’s age ensemble (<code>ageEnsemble</code>) is used when it has one, except with <code>binFun = simpleBinTs</code>. Requires lipdR &gt;= 0.7.3.</li>
+<li>Any other <code>ageVar</code> (for example <code>"age"</code> or <code>"ageEnsemble"</code>) is used as it is, as before. Results for Temp12k-style inputs, whose <code>age</code> is already in yr BP, are unchanged.</li>
+<li>Composites record their <code>timeUnits</code>. <code><a href="../reference/plotComposite.html">plotComposite()</a></code> and <code><a href="../reference/printComposite.html">printComposite()</a></code> label the time axis with them, and year CE axes run forward instead of reversed.</li>
+<li>
+<code><a href="../reference/simpleBinTs.html">simpleBinTs()</a></code> and <code><a href="../reference/sampleEnsembleThenBinTs.html">sampleEnsembleThenBinTs()</a></code> accept a one-row timeseries tibble as well as a TS element.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="0.4.0" id="compositer-040">compositeR 0.4.0<a class="anchor" aria-label="anchor" href="#compositer-040"></a></h2>
 <ul><li>
