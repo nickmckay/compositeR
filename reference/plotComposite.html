@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">compositeR</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.6.0</span>
       </span>
     </div>
 
@@ -65,10 +65,11 @@
     <div id="ref-usage">
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">plotComposite</span><span class="op">(</span></span>
 <span>  <span class="va">compositeList</span>,</span>
-<span>  ageUnits <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  time.units <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  valUnits <span class="op">=</span> <span class="st">"standardized"</span>,</span>
 <span>  title <span class="op">=</span> <span class="st">"composite proxy record"</span>,</span>
 <span>  combine <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  ageUnits <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -81,8 +82,8 @@
 <dd><p>The output of compositeEnsembles()</p></dd>
 
 
-<dt id="arg-ageunits">ageUnits<a class="anchor" aria-label="anchor" href="#arg-ageunits"></a></dt>
-<dd><p>units of the time axis. NULL (default) uses the units the composite was made in (`compositeList$timeUnits`), or "yr BP" for older composites. Year CE axes run forward; other axes are reversed.</p></dd>
+<dt id="arg-time-units">time.units<a class="anchor" aria-label="anchor" href="#arg-time-units"></a></dt>
+<dd><p>the time scale to plot on, e.g. "yr BP", "ka" or "CE". NULL (default) uses the scale the composite was made on (`compositeList$timeUnits`, or "yr BP" for composites made before compositeR 0.5.0); another scale converts the axis. Axes that count forward (year CE) run left to right; axes that count back are reversed.</p></dd>
 
 
 <dt id="arg-valunits">valUnits<a class="anchor" aria-label="anchor" href="#arg-valunits"></a></dt>
@@ -95,6 +96,10 @@
 
 <dt id="arg-combine">combine<a class="anchor" aria-label="anchor" href="#arg-combine"></a></dt>
 <dd><p>output a combined figure using egg::ggarrange or provide a list of subplots</p></dd>
+
+
+<dt id="arg-ageunits">ageUnits<a class="anchor" aria-label="anchor" href="#arg-ageunits"></a></dt>
+<dd><p>deprecated name for `time.units`</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

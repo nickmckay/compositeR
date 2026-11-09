@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">compositeR</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.6.0</span>
       </span>
     </div>
 
@@ -66,7 +66,8 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sampleEnsembleThenBinTs</span><span class="op">(</span></span>
 <span>  <span class="va">ts</span>,</span>
 <span>  <span class="va">binvec</span>,</span>
-<span>  ageVar <span class="op">=</span> <span class="st">"age"</span>,</span>
+<span>  time.variable <span class="op">=</span> <span class="st">"age"</span>,</span>
+<span>  time.units <span class="op">=</span> <span class="st">"yr BP"</span>,</span>
 <span>  uncVar <span class="op">=</span> <span class="st">"paleoData_uncertainty1sd"</span>,</span>
 <span>  defaultUnc <span class="op">=</span> <span class="fl">1.5</span>,</span>
 <span>  uncUnits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"native"</span>, <span class="st">"sd"</span><span class="op">)</span>,</span>
@@ -78,7 +79,8 @@
 <span>  spreadMax <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diff.html" class="external-link">diff</a></span><span class="op">(</span><span class="va">thisAge</span><span class="op">)</span><span class="op">)</span>, probs <span class="op">=</span> <span class="fl">0.75</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  gaussianizeInput <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  alignInterpDirection <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  scope <span class="op">=</span> <span class="st">"climate"</span></span>
+<span>  scope <span class="op">=</span> <span class="st">"climate"</span>,</span>
+<span>  ageVar <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -94,8 +96,12 @@
 <dd><p>vector of time boundaries over which to bin</p></dd>
 
 
-<dt id="arg-agevar">ageVar<a class="anchor" aria-label="anchor" href="#arg-agevar"></a></dt>
-<dd><p>specify the name the time variable (typically 'age' or 'year')</p></dd>
+<dt id="arg-time-variable">time.variable<a class="anchor" aria-label="anchor" href="#arg-time-variable"></a></dt>
+<dd><p>the name of the time field of `ts` to bin on (e.g. "age" or "year"), used as it is</p></dd>
+
+
+<dt id="arg-time-units">time.units<a class="anchor" aria-label="anchor" href="#arg-time-units"></a></dt>
+<dd><p>the time scale of that field (default "yr BP")</p></dd>
 
 
 <dt id="arg-uncvar">uncVar<a class="anchor" aria-label="anchor" href="#arg-uncvar"></a></dt>
@@ -144,6 +150,10 @@
 
 <dt id="arg-scope">scope<a class="anchor" aria-label="anchor" href="#arg-scope"></a></dt>
 <dd><p>the interpretation scope to align with (typically "climate" (default) or "isotope"). See [interpDirectionSign()].</p></dd>
+
+
+<dt id="arg-agevar">ageVar<a class="anchor" aria-label="anchor" href="#arg-agevar"></a></dt>
+<dd><p>deprecated name for `time.variable`</p></dd>
 
 </dl></div>
     <div id="value">

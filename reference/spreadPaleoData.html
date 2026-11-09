@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">compositeR</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.6.0</span>
       </span>
     </div>
 
@@ -70,8 +70,9 @@
 <span>  spreadBy <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  spreadMax <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  spreadMaxPct <span class="op">=</span> <span class="cn">NA</span>,</span>
-<span>  minAge <span class="op">=</span> <span class="op">-</span><span class="fl">75</span>,</span>
-<span>  maxAge <span class="op">=</span> <span class="cn">NA</span></span>
+<span>  minAge <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  maxAge <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  time.units <span class="op">=</span> <span class="st">"yr BP"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -104,11 +105,15 @@
 
 
 <dt id="arg-minage">minAge<a class="anchor" aria-label="anchor" href="#arg-minage"></a></dt>
-<dd><p>minimum age value for output age vector. Default is -75 cal yr BP (2025 CE)</p></dd>
+<dd><p>minimum value for the output time vector. NA (default) means no limit, except that times after 2025 CE are dropped (on a yr BP scale that is -75)</p></dd>
 
 
 <dt id="arg-maxage">maxAge<a class="anchor" aria-label="anchor" href="#arg-maxage"></a></dt>
 <dd><p>maximum age value for output age vector. If NA, this will be the max(age) plus half the gap between the two oldest ages</p></dd>
+
+
+<dt id="arg-time-units">time.units<a class="anchor" aria-label="anchor" href="#arg-time-units"></a></dt>
+<dd><p>the time scale of `age` (default "yr BP"), used to find 2025 CE</p></dd>
 
 </dl></div>
     <div id="value">

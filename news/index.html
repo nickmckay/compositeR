@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">compositeR</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.6.0</span>
       </span>
     </div>
 
@@ -57,6 +57,28 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="page-header" data-toc-text="0.6.0" id="compositer-060">compositeR 0.6.0<a class="anchor" aria-label="anchor" href="#compositer-060"></a></h2>
+<p>Composites can be made on any time scale and any time variable, using the time scales lipdR 0.8 stores on every time column. Requires lipdR &gt;= 0.8.1.</p>
+<ul><li>
+<code><a href="../reference/compositeEnsembles.html">compositeEnsembles()</a></code> arguments are now <code>time.variable</code> and <code>time.units</code>, matching the other LiPD packages. <code>ageVar</code> and <code>timeUnits</code> still work, with a deprecation warning.</li>
+<li>
+<code>time.variable</code> can be any time variable of the records (e.g. <code>"age"</code>, <code>"year"</code>, or a column such as <code>"calAge"</code>; see <code><a href="https://rdrr.io/pkg/lipdR/man/tsTimeVariables.html" class="external-link">lipdR::tsTimeVariables()</a></code>), and it is always converted to <code>time.units</code>. Before, any variable other than <code>"time"</code> was used without conversion; for records whose variable is already on <code>time.units</code> (e.g. Temp12k <code>age</code> in yr BP), results are unchanged.</li>
+<li>
+<code>time.units</code> now defaults to the records’ own time scale when they all share one, and to yr BP otherwise (it was always yr BP). For example, a set of tree-ring records in year CE is now composited in year CE, with a message saying so; <code>binvec</code> is read in that scale. Set <code>time.units</code> to choose. A <code>binvec</code> that doesn’t overlap the records (usually one on the wrong scale) is now an error.</li>
+<li>Records whose time scale was assumed (units that don’t say) give one warning per call, listing them.</li>
+<li>The output records <code>timeVariableName</code> as well as <code>timeUnits</code>, and <code>parameters</code> records <code>time.variable</code> and <code>time.units</code> (instead of <code>ageVar</code> and <code>timeUnits</code>). Normalized labels are used, e.g. <code>"yr AD"</code> for <code>"CE"</code>.</li>
+<li>
+<code><a href="../reference/plotComposite.html">plotComposite()</a></code> gains <code>time.units</code>, which converts the axis to another scale (<code>ageUnits</code>, which only relabeled it, is deprecated). The axis direction comes from the scale.</li>
+<li>
+<code><a href="../reference/simpleBinTs.html">simpleBinTs()</a></code> and <code><a href="../reference/sampleEnsembleThenBinTs.html">sampleEnsembleThenBinTs()</a></code>: <code>ageVar</code> is now <code>time.variable</code> (old name deprecated), and a new <code>time.units</code> gives the scale of that variable.</li>
+<li>
+<code><a href="../reference/spreadPaleoData.html">spreadPaleoData()</a></code> works on any time scale, with a new <code>time.units</code> argument (default “yr BP”). The default <code>minAge</code> of -75 (2025 CE in yr BP) dropped every year before 75 BCE on a year CE axis; the default is now no lower limit, but nothing after 2025 CE. The spreading grid is rounded to whole years on the scale, so ka axes work (it used to round to whole ka).</li>
+<li>
+<code><a href="../reference/standardizeOverRandomInterval.html">standardizeOverRandomInterval()</a></code> picks its random start from steps of a year, or of the bin spacing if that is finer, so it works on ka axes.</li>
+<li>
+<code>scaleComposite()</code> accepts a composite object, and gains <code>time.units</code> and <code>scale.time.units</code> to put the scaling data on the composite’s scale.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="0.5.0" id="compositer-050">compositeR 0.5.0<a class="anchor" aria-label="anchor" href="#compositer-050"></a></h2>
 <ul><li>
