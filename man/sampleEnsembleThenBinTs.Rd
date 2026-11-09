@@ -47,9 +47,9 @@ sampleEnsembleThenBinTs(
 
 \item{spread}{should values be interpolated between bins? (TRUE/FALSE)}
 
-\item{spreadBy}{if newAge is not supplied, what is the desired resolution of the spread values? If NA, the minimum age gap divided by 5 will be used}
+\item{spreadBy}{if newAge is not supplied, what is the desired resolution of the spread values (in `time.units`)? If NA, the minimum age gap divided by 5 will be used}
 
-\item{spreadMax}{a limit to how many years a value can be interpolated across (given in years). If NA, no limit is imposed.}
+\item{spreadMax}{a limit to how far a value can be interpolated (in `time.units`). If NA, no limit is imposed.}
 
 \item{gaussianizeInput}{Force values to gaussian distribution before analysis (TRUE/FALSE)}
 

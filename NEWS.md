@@ -1,3 +1,10 @@
+# compositeR 0.6.1
+
+* Compositing with spreading (`spread = TRUE`, the default) now gives the same composite whatever the time scale: the same records composited on yr BP, ka or year CE agree after converting the axes. Before, results on a year CE axis were close to, but not the same as, those on yr BP or ka. Results on a yr BP axis are unchanged.
+  * `spreadPaleoData()` now always spreads on a yr BP axis, converting other scales to yr BP and back, so ties between two equally near values break the same way on every scale. `spreadAge` is still returned in `time.units`, in increasing order.
+  * `simpleBinTs()` (and so `sampleEnsembleThenBinTs()` and `compositeEnsembles()`) puts a value that falls exactly on a bin edge in the younger bin on every scale. On a year CE axis it used to go in the older bin. `scaleComposite()` does the same when it knows the composite's `time.units`.
+* `spreadPaleoData()` now honors `maxAge`, which it used to ignore. `minAge` and `maxAge` are the youngest and oldest times kept, in `time.units`: on a year CE axis `maxAge` is the earliest year kept and `minAge` the latest. (In 0.6.0, `minAge` on a year CE axis was the earliest year kept.) The output still never extends past the oldest end of the record.
+
 # compositeR 0.6.0
 
 Composites can be made on any time scale and any time variable, using the time scales lipdR 0.8 stores on every time column. Requires lipdR >= 0.8.1.

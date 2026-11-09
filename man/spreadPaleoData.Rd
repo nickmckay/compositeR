@@ -17,27 +17,34 @@ spreadPaleoData(
 )
 }
 \arguments{
-\item{age}{age vector for original timeseries}
+\item{age}{age vector for original timeseries, in `time.units`}
 
 \item{value}{paleoData vector to spread}
 
-\item{newAge}{new age vector to spread over. If NA, this will be estimated using seq(min(age), max(age), spreadBy)}
+\item{newAge}{new age vector to spread over, in `time.units`. If NA, this will be estimated using seq(min(age), max(age), spreadBy)}
 
-\item{spreadBy}{if newAge is not supplied, what is the desired resolution of the spread values? If NA, the minimum age gap divided by 5 will be used}
+\item{spreadBy}{if newAge is not supplied, what is the desired resolution of the spread values (in `time.units`)? If NA, the minimum age gap divided by 5 will be used}
 
-\item{spreadMax}{a limit to how many years a value can be interpolated across (given in years). If NA, no limit is imposed.}
+\item{spreadMax}{a limit to how far a value can be interpolated (in `time.units`). If NA, no limit is imposed.}
 
 \item{spreadMaxPct}{a limit to how many years a value can be interpolated across (given in the quantile ranking of age gaps (0.5=the median age gap). A floor of 1 year is imposed). If NA, no limit is imposed. Superseded by maxGap}
 
-\item{minAge}{minimum value for the output time vector. NA (default) means no limit, except that times after 2025 CE are dropped (on a yr BP scale that is -75)}
+\item{minAge}{the youngest time to keep, in `time.units`. NA (default) means no limit, except that times after 2025 CE are dropped (on a yr BP scale that is -75). On a retrograde scale (yr BP, ka) this is the smallest value kept; on a prograde scale (year CE) it is the latest year kept.}
 
-\item{maxAge}{maximum age value for output age vector. If NA, this will be the max(age) plus half the gap between the two oldest ages}
+\item{maxAge}{the oldest time to keep, in `time.units`. On a retrograde scale (yr BP, ka) this is the largest value kept; on a prograde scale (year CE) it is the earliest year kept. The output never extends past the oldest end of the record (the oldest age plus half the gap between the two oldest ages), which is also the limit when maxAge is NA (default).}
 
-\item{time.units}{the time scale of `age` (default "yr BP"), used to find 2025 CE}
+\item{time.units}{the time scale of `age`, `newAge`, `spreadBy`, `spreadMax`, `minAge` and `maxAge` (default "yr BP")}
 }
 \value{
-list of length=2 (spreadAge and spreadVal numeric vectors)
+list of length=2 (spreadAge and spreadVal numeric vectors). spreadAge is in `time.units`, in increasing order.
 }
 \description{
 A function to interpolate paleoData_values to a new vector using a nearest neighbor interpolation.
+}
+\details{
+The spreading is always done on a yr BP axis: ages on any other
+scale (`time.units`) are converted to yr BP, spread, and converted back.
+This makes the result the same, after converting the axis, whichever scale
+the record is on, including how ties between two equally near values are
+broken. On a yr BP axis nothing is converted.
 }

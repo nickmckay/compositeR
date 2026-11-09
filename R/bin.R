@@ -35,19 +35,25 @@ removeConsecutiveDuplicates <- function(spreadValues){
 #' spreadPaleoData
 #' @description A function to interpolate paleoData_values to a new vector using a nearest neighbor interpolation.
 #'
-#' @param age    age vector for original timeseries
+#' @details The spreading is always done on a yr BP axis: ages on any other
+#' scale (`time.units`) are converted to yr BP, spread, and converted back.
+#' This makes the result the same, after converting the axis, whichever scale
+#' the record is on, including how ties between two equally near values are
+#' broken. On a yr BP axis nothing is converted.
+#'
+#' @param age    age vector for original timeseries, in `time.units`
 #' @param value  paleoData vector to spread
-#' @param newAge new age vector to spread over. If NA, this will be estimated using seq(min(age), max(age), spreadBy)
-#' @param spreadBy if newAge is not supplied, what is the desired resolution of the spread values? If NA, the minimum age gap divided by 5 will be used
-#' @param spreadMax a limit to how many years a value can be interpolated across (given in years). If NA, no limit is imposed.
+#' @param newAge new age vector to spread over, in `time.units`. If NA, this will be estimated using seq(min(age), max(age), spreadBy)
+#' @param spreadBy if newAge is not supplied, what is the desired resolution of the spread values (in `time.units`)? If NA, the minimum age gap divided by 5 will be used
+#' @param spreadMax a limit to how far a value can be interpolated (in `time.units`). If NA, no limit is imposed.
 #' @param spreadMaxPct a limit to how many years a value can be interpolated across (given in the quantile ranking of age gaps (0.5=the median age gap). A floor of 1 year is imposed). If NA, no limit is imposed. Superseded by maxGap
-#' @param minAge minimum value for the output time vector. NA (default) means no limit, except that times after 2025 CE are dropped (on a yr BP scale that is -75)
-#' @param time.units the time scale of `age` (default "yr BP"), used to find 2025 CE
-#' @param maxAge maximum age value for output age vector. If NA, this will be the max(age) plus half the gap between the two oldest ages
+#' @param minAge the youngest time to keep, in `time.units`. NA (default) means no limit, except that times after 2025 CE are dropped (on a yr BP scale that is -75). On a retrograde scale (yr BP, ka) this is the smallest value kept; on a prograde scale (year CE) it is the latest year kept.
+#' @param maxAge the oldest time to keep, in `time.units`. On a retrograde scale (yr BP, ka) this is the largest value kept; on a prograde scale (year CE) it is the earliest year kept. The output never extends past the oldest end of the record (the oldest age plus half the gap between the two oldest ages), which is also the limit when maxAge is NA (default).
+#' @param time.units the time scale of `age`, `newAge`, `spreadBy`, `spreadMax`, `minAge` and `maxAge` (default "yr BP")
 #'
 #' @importFrom magrittr %>%
 #'
-#' @return list of length=2 (spreadAge and spreadVal numeric vectors)
+#' @return list of length=2 (spreadAge and spreadVal numeric vectors). spreadAge is in `time.units`, in increasing order.
 #' @export
 spreadPaleoData <- function(age,
                             value,
@@ -65,6 +71,32 @@ spreadPaleoData <- function(age,
   good <- which(is.finite(age))
   if(length(good) < 2){return(list(spreadAge = matrix(NA,ncol = length(age)),spreadVal = matrix(NA,ncol = length(age))))}
 
+  #Spread on a yr BP axis whatever the scale, so ties break the same way on
+  #every scale. Times (age, newAge, minAge, maxAge) are converted; durations
+  #(spreadBy, spreadMax) are scaled to years.
+  scale <- lipdR::timeScale(time.units)
+  isBP <- identical(scale$timeUnits, "yr BP")
+  toBP <- function(x){
+    if(isBP || all(is.na(x))){return(x)}
+    #round off floating point noise from the conversion (e.g. ka * 1000)
+    round(lipdR::convertTime(x, from = time.units, to = "yr BP"), 6)
+  }
+  fromBP <- function(x){
+    if(isBP || all(is.na(x))){return(x)}
+    lipdR::convertTime(x, from = "yr BP", to = time.units)
+  }
+  yrsPerUnit <- 10^scale$timeExponent
+  age <- toBP(age)
+  newAge <- toBP(newAge)
+  minAge <- toBP(minAge)
+  maxAge <- toBP(maxAge)
+  toYears <- function(x){
+    if(isBP){return(x)}
+    round(abs(x) * yrsPerUnit, 6)
+  }
+  spreadBy <- toYears(spreadBy)
+  spreadMax <- toYears(spreadMax)
+
   #Remove any NA ages
   age   <- as.vector(age[good])
   value <- as.vector(value[good])
@@ -81,19 +113,18 @@ spreadPaleoData <- function(age,
     age <- agesnew
   }
 
-  #find max age to cutoff. This is an issue if the newAge vector is too long for the record
-  maxAge <- max(age)+diff(age)[length(diff(age))]/2
+  #find the oldest end of the record, past which nothing is kept. This is an
+  #issue if the newAge vector is too long for the record
+  recordEnd <- max(age)+diff(age)[length(diff(age))]/2
 
-  #get vector to spread data to, rounded to whole years on the time scale
-  #(1 for yr BP or CE, 0.001 for ka)
-  yr <- 10^(-lipdR::timeScale(time.units)$timeExponent)
+  #get vector to spread data to, rounded to whole years
   if(any(is.na(newAge))){
     # if NA, use the minimum age gap divided by 5 to get a spreadBy value
-    if (is.na(spreadBy)){spreadBy <- ceiling(min(abs(diff(age))/5)/yr)*yr}
+    if (is.na(spreadBy)){spreadBy <- ceiling(min(abs(diff(age))/5))}
     # if NA, create a newAge which considered the age range of the proxy record
     # and adds additional buffer based on the resolution at either end
-    newAge <- seq(ceiling((min(age)-diff(age)[1]/2)/yr)*yr,
-                  floor(maxAge/yr)*yr,
+    newAge <- seq(ceiling(min(age)-diff(age)[1]/2),
+                  floor(recordEnd),
                   by = spreadBy)
   }else{
     spreadBy <- min(diff(sort(newAge)))
@@ -123,20 +154,22 @@ spreadPaleoData <- function(age,
     newVals[d2n > spreadMax] <- NA
   }
 
-  #remove values that are too young or old: nothing after 2025 CE, and nothing
-  #past the end of the record
-  present <- lipdR::convertTime(2025, from = "CE", to = time.units)
-  if(lipdR::isPrograde(time.units)){
-    lower <- if(is.na(minAge)) -Inf else minAge
-    upper <- min(maxAge, present)
-  }else{
-    lower <- if(is.na(minAge)) present else minAge
-    upper <- maxAge
-  }
+  #remove values that are too young or old: nothing younger than minAge
+  #(default 2025 CE, -75 BP), and nothing older than maxAge or the end of the
+  #record
+  lower <- if(is.na(minAge)) lipdR::convertTime(2025, from = "CE", to = "yr BP") else minAge
+  upper <- if(is.na(maxAge)) recordEnd else min(maxAge, recordEnd)
   good <- dplyr::between(newAge,lower,upper)
   if(sum(!good) > 0){
     newAge[!good] <- NA
     newVals[!good] <- NA
+  }
+
+  #back to the original scale, in increasing order
+  newAge <- fromBP(newAge)
+  if(!isBP && lipdR::isPrograde(time.units)){
+    newAge <- rev(newAge)
+    newVals <- rev(newVals)
   }
 
   #return
@@ -209,7 +242,7 @@ simpleBinTs <- function(ts,
   }
 
   #bin
-  binnedVals <- ens::bin(age,vals,bin.vec = binvec)[,2]
+  binnedVals <- binOnAxis(age,vals,binvec,time.units)[,2]
 
   return(binnedVals)
 }
@@ -289,6 +322,20 @@ sampleEnsembleThenBinTs <- function(ts,
 
   return(binnedVals)
 
+}
+
+
+# ens::bin() on any time axis. ens::bin() puts a value on a bin edge in the
+# bin below it; bin on a retrograde orientation whatever the axis, so edge
+# values fall in the same (younger) bin on every time scale. NULL time.units
+# bins as given.
+binOnAxis <- function(time, values, binvec, time.units = NULL){
+  if(!is.null(time.units) && lipdR::isPrograde(time.units)){
+    out <- ens::bin(-time, values, bin.vec = -binvec)
+    out$x <- -out$x
+    return(out)
+  }
+  ens::bin(time, values, bin.vec = binvec)
 }
 
 
