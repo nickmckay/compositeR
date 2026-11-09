@@ -58,7 +58,10 @@ standardizeOverRandomInterval <- function(ages,pdm,duration,searchRange,minN = 8
   if (duration>diff(searchRange)){stop("The duration must be <= the age range indicated by searchRange")}
 
   #Find a random searchRange to use
-  interval <- sample(seq(min(searchRange),max(searchRange)-duration,1),1)
+  #candidate start times, a year apart (or the bin spacing, if finer, e.g. on a ka scale)
+  step <- min(1, abs(stats::median(diff(ages))))
+  starts <- seq(min(searchRange),max(searchRange)-duration,step)
+  interval <- starts[sample.int(length(starts),1)]
   interval <- c(interval,interval+duration)
 
   scaledPdm <- standardizeOverInterval(ages, pdm, interval=interval, minN = minN, normalizeVariance = normalizeVariance)

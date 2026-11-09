@@ -126,7 +126,8 @@ ourCompositer <- function(cellnum,toComp,binvec){
   tc <- as.lipdTs(thisTS) |> splitInterpretationByScope()
   ensOut <- compositeEnsembles(tc,
                                 binvec=binvec,
-                                ageVar = "year",
+                                time.variable = "year",
+                                time.units = "CE",
                                 binFun=sampleEnsembleThenBinTs,
                                 stanFun=standardizeOverRandomInterval,
                                 normalizeVariance=TRUE,

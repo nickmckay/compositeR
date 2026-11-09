@@ -41,7 +41,8 @@ removeConsecutiveDuplicates <- function(spreadValues){
 #' @param spreadBy if newAge is not supplied, what is the desired resolution of the spread values? If NA, the minimum age gap divided by 5 will be used
 #' @param spreadMax a limit to how many years a value can be interpolated across (given in years). If NA, no limit is imposed.
 #' @param spreadMaxPct a limit to how many years a value can be interpolated across (given in the quantile ranking of age gaps (0.5=the median age gap). A floor of 1 year is imposed). If NA, no limit is imposed. Superseded by maxGap
-#' @param minAge minimum age value for output age vector. Default is -75 cal yr BP (2025 CE)
+#' @param minAge minimum value for the output time vector. NA (default) means no limit, except that times after 2025 CE are dropped (on a yr BP scale that is -75)
+#' @param time.units the time scale of `age` (default "yr BP"), used to find 2025 CE
 #' @param maxAge maximum age value for output age vector. If NA, this will be the max(age) plus half the gap between the two oldest ages
 #'
 #' @importFrom magrittr %>%
@@ -54,8 +55,9 @@ spreadPaleoData <- function(age,
                             spreadBy = NA,
                             spreadMax = NA,
                             spreadMaxPct = NA,
-                            minAge = -75,
-                            maxAge = NA){
+                            minAge = NA,
+                            maxAge = NA,
+                            time.units = "yr BP"){
 
   #Check to make sure the input ages look ok
   if(length(age)==0){return(list(spreadAge = age,spreadVal = value))} #what's happening
@@ -82,14 +84,16 @@ spreadPaleoData <- function(age,
   #find max age to cutoff. This is an issue if the newAge vector is too long for the record
   maxAge <- max(age)+diff(age)[length(diff(age))]/2
 
-  #get vector to spread data to
+  #get vector to spread data to, rounded to whole years on the time scale
+  #(1 for yr BP or CE, 0.001 for ka)
+  yr <- 10^(-lipdR::timeScale(time.units)$timeExponent)
   if(any(is.na(newAge))){
     # if NA, use the minimum age gap divided by 5 to get a spreadBy value
-    if (is.na(spreadBy)){spreadBy <- ceiling(min(abs(diff(age))/5))}
+    if (is.na(spreadBy)){spreadBy <- ceiling(min(abs(diff(age))/5)/yr)*yr}
     # if NA, create a newAge which considered the age range of the proxy record
     # and adds additional buffer based on the resolution at either end
-    newAge <- seq(ceiling(min(age)-diff(age)[1]/2),
-                  floor(maxAge),
+    newAge <- seq(ceiling((min(age)-diff(age)[1]/2)/yr)*yr,
+                  floor(maxAge/yr)*yr,
                   by = spreadBy)
   }else{
     spreadBy <- min(diff(sort(newAge)))
@@ -119,8 +123,17 @@ spreadPaleoData <- function(age,
     newVals[d2n > spreadMax] <- NA
   }
 
-  #remove values that are too young or old
-  good <- dplyr::between(newAge,minAge,maxAge)
+  #remove values that are too young or old: nothing after 2025 CE, and nothing
+  #past the end of the record
+  present <- lipdR::convertTime(2025, from = "CE", to = time.units)
+  if(lipdR::isPrograde(time.units)){
+    lower <- if(is.na(minAge)) -Inf else minAge
+    upper <- min(maxAge, present)
+  }else{
+    lower <- if(is.na(minAge)) present else minAge
+    upper <- maxAge
+  }
+  good <- dplyr::between(newAge,lower,upper)
   if(sum(!good) > 0){
     newAge[!good] <- NA
     newVals[!good] <- NA
@@ -136,7 +149,9 @@ spreadPaleoData <- function(age,
 #'
 #' @param ts one timeseries: an element of a TS list, or a one-row timeseries tibble
 #' @param binvec vector of time boundaries over which to bin
-#' @param ageVar specify the name the time variable (typically 'age' or 'year')
+#' @param time.variable the name of the time field of `ts` to bin on (e.g. "age" or "year"), used as it is
+#' @param time.units the time scale of that field (default "yr BP")
+#' @param ageVar deprecated name for `time.variable`
 #' @param spread should values be interpolated between bins? (TRUE/FALSE)
 #' @param gaussianizeInput Force values to gaussian distribution before analysis (TRUE/FALSE)
 #' @param alignInterpDirection multiply values by -1 if the interpretation direction is negative (TRUE/FALSE). See [interpDirectionSign()].
@@ -148,14 +163,17 @@ spreadPaleoData <- function(age,
 #' @importFrom pracma interp1
 simpleBinTs <- function(ts,
                         binvec,
-                        ageVar = "age",
+                        time.variable = "age",
+                        time.units = "yr BP",
                         spread = TRUE,
                         spreadBy = abs(mean(diff(binvec)))/10,
                         spreadMax = as.numeric(abs(stats::quantile(abs(diff(sort(ts[[ageVar]]))),probs = .75,na.rm = TRUE))),
                         gaussianizeInput= FALSE,
                         alignInterpDirection = TRUE,
-                        scope = "climate"){
+                        scope = "climate",
+                        ageVar = NULL){
   ts <- asTsEntry(ts)
+  ageVar <- deprecatedArg(ageVar, "ageVar", time.variable, "time.variable")
 
   #Check not ensemble
 
@@ -167,7 +185,8 @@ simpleBinTs <- function(ts,
     sp <- spreadPaleoData(age = ts[[ageVar]],
                           value = ts$paleoData_values,
                           spreadBy = spreadBy,
-                          spreadMax = spreadMax)
+                          spreadMax = spreadMax,
+                          time.units = time.units)
 
     age <- sp$spreadAge
     vals <- sp$spreadVal
@@ -211,7 +230,8 @@ simpleBinTs <- function(ts,
 #' @export
 sampleEnsembleThenBinTs <- function(ts,
                                     binvec,
-                                    ageVar = "age",
+                                    time.variable = "age",
+                                    time.units = "yr BP",
                                     uncVar = "paleoData_uncertainty1sd",
                                     defaultUnc = 1.5,
                                     uncUnits = c("native", "sd"),
@@ -223,8 +243,10 @@ sampleEnsembleThenBinTs <- function(ts,
                                     spreadMax =  as.numeric(stats::quantile(abs(diff(thisAge)),probs = .75,na.rm = TRUE)),
                                     gaussianizeInput = FALSE,
                                     alignInterpDirection = TRUE,
-                                    scope = "climate"){
+                                    scope = "climate",
+                                    ageVar = NULL){
   ts <- asTsEntry(ts)
+  ageVar <- deprecatedArg(ageVar, "ageVar", time.variable, "time.variable")
   ts_sampled <- ts
   #sample from ageEnsemble
   if(is.null(ts[[ageVar]])){
@@ -258,7 +280,7 @@ sampleEnsembleThenBinTs <- function(ts,
   if(length(thisPdv) != length(thisAge)){stop("Paleodata and ages must have the same number of observations.")}
 
   #bin values using simpleBinTs()
-  binnedVals <- simpleBinTs(ts_sampled, binvec, ageVar = ageVar, spread = spread,
+  binnedVals <- simpleBinTs(ts_sampled, binvec, time.variable = ageVar, time.units = time.units, spread = spread,
                             spreadBy = spreadBy,
                             spreadMax = spreadMax,
                             gaussianizeInput = gaussianizeInput,

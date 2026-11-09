@@ -1,3 +1,18 @@
+# compositeR 0.6.0
+
+Composites can be made on any time scale and any time variable, using the time scales lipdR 0.8 stores on every time column. Requires lipdR >= 0.8.1.
+
+* `compositeEnsembles()` arguments are now `time.variable` and `time.units`, matching the other LiPD packages. `ageVar` and `timeUnits` still work, with a deprecation warning.
+* `time.variable` can be any time variable of the records (e.g. `"age"`, `"year"`, or a column such as `"calAge"`; see `lipdR::tsTimeVariables()`), and it is always converted to `time.units`. Before, any variable other than `"time"` was used without conversion; for records whose variable is already on `time.units` (e.g. Temp12k `age` in yr BP), results are unchanged.
+* `time.units` now defaults to the records' own time scale when they all share one, and to yr BP otherwise (it was always yr BP). For example, a set of tree-ring records in year CE is now composited in year CE, with a message saying so; `binvec` is read in that scale. Set `time.units` to choose. A `binvec` that doesn't overlap the records (usually one on the wrong scale) is now an error.
+* Records whose time scale was assumed (units that don't say) give one warning per call, listing them.
+* The output records `timeVariableName` as well as `timeUnits`, and `parameters` records `time.variable` and `time.units` (instead of `ageVar` and `timeUnits`). Normalized labels are used, e.g. `"yr AD"` for `"CE"`.
+* `plotComposite()` gains `time.units`, which converts the axis to another scale (`ageUnits`, which only relabeled it, is deprecated). The axis direction comes from the scale.
+* `simpleBinTs()` and `sampleEnsembleThenBinTs()`: `ageVar` is now `time.variable` (old name deprecated), and a new `time.units` gives the scale of that variable.
+* `spreadPaleoData()` works on any time scale, with a new `time.units` argument (default "yr BP"). The default `minAge` of -75 (2025 CE in yr BP) dropped every year before 75 BCE on a year CE axis; the default is now no lower limit, but nothing after 2025 CE. The spreading grid is rounded to whole years on the scale, so ka axes work (it used to round to whole ka).
+* `standardizeOverRandomInterval()` picks its random start from steps of a year, or of the bin spacing if that is finer, so it works on ka axes.
+* `scaleComposite()` accepts a composite object, and gains `time.units` and `scale.time.units` to put the scaling data on the composite's scale.
+
 # compositeR 0.5.0
 
 * `compositeEnsembles()` now composites on each record's `time` by default (`ageVar = "time"`), converted to a common scale with the new `timeUnits` argument (default `"yr BP"`). It uses the time metadata that lipdR 0.7 adds in `extractTs()`, so records in year CE (tree rings, corals, documents), yr BP and ka can be composited together without converting them first. `binvec` is in `timeUnits`. A record's age ensemble (`ageEnsemble`) is used when it has one, except with `binFun = simpleBinTs`. Requires lipdR >= 0.7.3.
