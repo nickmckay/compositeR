@@ -4,12 +4,14 @@
 \alias{addCompositeTime}
 \title{Add each record's time, on one scale, for compositing}
 \usage{
-addCompositeTime(fTS, timeUnits, ensemble = TRUE)
+addCompositeTime(fTS, time.units, time.variable = "time", ensemble = TRUE)
 }
 \arguments{
 \item{fTS}{a TS list}
 
-\item{timeUnits}{the target time scale}
+\item{time.units}{the target time scale}
+
+\item{time.variable}{the time variable to use (see [lipdR::getTsTime()])}
 
 \item{ensemble}{use age ensembles where records have them?}
 }

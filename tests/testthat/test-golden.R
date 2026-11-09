@@ -13,14 +13,16 @@ usable <- which(sapply(Temp12k, function(x) {
 fTS <- Temp12k[usable]
 binvec <- seq(0, 10000, by = 500)
 
-# compositeR 0.5.0 added timeUnits to the output and parameters; the
-# reference predates it, so compare without those fields.
+# compositeR 0.5.0 added the time scale to the output and parameters, and
+# 0.6.0 renamed ageVar to time.variable; the reference predates both, so
+# compare without those fields.
 asReference <- function(out, ageVar = "age") {
   out$timeUnits <- NULL
-  out$parameters$timeUnits <- NULL
-  out$paramaters$timeUnits <- NULL
-  out$parameters$ageVar <- ageVar
-  out$paramaters$ageVar <- ageVar
+  out$timeVariableName <- NULL
+  p <- out$parameters
+  p <- cbind(p["nens"], ageVar = ageVar, p[setdiff(names(p), c("nens", "time.variable", "time.units"))])
+  out$parameters <- p
+  out$paramaters <- p
   out
 }
 
@@ -128,9 +130,9 @@ test_that("compositeEnsembles2 is a deprecated alias of compositeEnsembles", {
   expect_equal(asReference(old), ref$compositeSCC)
 })
 
-test_that("compositing on ageVar = 'age' (no conversion) still matches the reference", {
+test_that("compositing on time.variable = 'age' still matches the reference", {
   set.seed(20)
-  out <- compositeEnsembles(fTS, binvec, nens = 5, ageVar = "age",
+  out <- compositeEnsembles(fTS, binvec, nens = 5, time.variable = "age",
                              stanFun = standardizeOverInterval,
                              interval = c(2000, 6000),
                              binFun = simpleBinTs,

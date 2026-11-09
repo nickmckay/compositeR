@@ -26,7 +26,8 @@ plot.paleoComposite <- function(x,...){
 #' @importFrom egg ggarrange
 #'
 #' @param compositeList The output of compositeEnsembles()
-#' @param ageUnits units of the time axis. NULL (default) uses the units the composite was made in (`compositeList$timeUnits`), or "yr BP" for older composites. Year CE axes run forward; other axes are reversed.
+#' @param time.units the time scale to plot on, e.g. "yr BP", "ka" or "CE". NULL (default) uses the scale the composite was made on (`compositeList$timeUnits`, or "yr BP" for composites made before compositeR 0.5.0); another scale converts the axis. Axes that count forward (year CE) run left to right; axes that count back are reversed.
+#' @param ageUnits deprecated name for `time.units`
 #' @param valUnits units for the composite (default = standardized)
 #' @param title a title for the combined plot (not used if combine == FALSE)
 #' @param combine output a combined figure using egg::ggarrange or provide a list of subplots
@@ -36,9 +37,15 @@ plot.paleoComposite <- function(x,...){
 #' @export
 
 
-plotComposite <- function(compositeList, ageUnits = NULL,valUnits='standardized',title='composite proxy record', combine=TRUE,...){
-  ageUnits <- ageUnits %||% compositeList$timeUnits %||% 'yr BP'
-  prograde <- isProgradeUnits(ageUnits)
+plotComposite <- function(compositeList, time.units = NULL,valUnits='standardized',title='composite proxy record', combine=TRUE, ageUnits = NULL,...){
+  time.units <- deprecatedArg(ageUnits, "ageUnits", time.units, "time.units")
+  fromUnits <- compositeList$timeUnits %||% 'yr BP'
+  time.units <- time.units %||% fromUnits
+  if(!identical(lipdR::timeScale(time.units)$timeUnits, lipdR::timeScale(fromUnits)$timeUnits)){
+    compositeList$ages <- lipdR::convertTime(compositeList$ages, from = fromUnits, to = time.units)
+  }
+  ageUnits <- lipdR::timeScale(time.units)$timeUnits
+  prograde <- lipdR::isPrograde(ageUnits)
   timeName <- if(prograde) 'year' else 'age'
   scaleX <- if(prograde) ggplot2::scale_x_continuous else ggplot2::scale_x_reverse
   ar <- range(compositeList$ages)

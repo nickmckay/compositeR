@@ -1,4 +1,13 @@
-scaleComposite <- function(composite,binvec,scaleYears,scaleData,scaleWindow = NA,rescale = TRUE,scaleVariance = TRUE){
+scaleComposite <- function(composite,binvec,scaleYears,scaleData,scaleWindow = NA,rescale = TRUE,scaleVariance = TRUE,
+                           time.units = NULL, scale.time.units = NULL){
+  if(inherits(composite, "paleoComposite")){
+    time.units <- time.units %||% composite$timeUnits
+    composite <- as.matrix(composite$composite)
+  }
+  #put the scaling data on the composite's time scale
+  if(!is.null(time.units) && !is.null(scale.time.units)){
+    scaleYears <- lipdR::convertTime(scaleYears, from = scale.time.units, to = time.units)
+  }
 
   if(NCOL(scaleData) > 1){#ensemble! :)
     d <- ens::bin(scaleYears,values = scaleData[,sample.int(ncol(scaleData),size = 1)],bin.vec = binvec)

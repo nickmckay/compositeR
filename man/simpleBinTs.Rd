@@ -7,14 +7,16 @@
 simpleBinTs(
   ts,
   binvec,
-  ageVar = "age",
+  time.variable = "age",
+  time.units = "yr BP",
   spread = TRUE,
   spreadBy = abs(mean(diff(binvec)))/10,
   spreadMax = as.numeric(abs(stats::quantile(abs(diff(sort(ts[[ageVar]]))), probs = 0.75,
     na.rm = TRUE))),
   gaussianizeInput = FALSE,
   alignInterpDirection = TRUE,
-  scope = "climate"
+  scope = "climate",
+  ageVar = NULL
 )
 }
 \arguments{
@@ -22,7 +24,9 @@ simpleBinTs(
 
 \item{binvec}{vector of time boundaries over which to bin}
 
-\item{ageVar}{specify the name the time variable (typically 'age' or 'year')}
+\item{time.variable}{the name of the time field of `ts` to bin on (e.g. "age" or "year"), used as it is}
+
+\item{time.units}{the time scale of that field (default "yr BP")}
 
 \item{spread}{should values be interpolated between bins? (TRUE/FALSE)}
 
@@ -35,6 +39,8 @@ simpleBinTs(
 \item{alignInterpDirection}{multiply values by -1 if the interpretation direction is negative (TRUE/FALSE). See [interpDirectionSign()].}
 
 \item{scope}{the interpretation scope to align with (typically "climate" (default) or "isotope"). See [interpDirectionSign()].}
+
+\item{ageVar}{deprecated name for `time.variable`}
 }
 \value{
 numeric vector of values of equal length to binvec

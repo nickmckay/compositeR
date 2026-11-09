@@ -9,8 +9,8 @@ compositeEnsembles(
   binvec,
   nens = 100,
   stanFun = standardizeOverRandomInterval,
-  ageVar = "time",
-  timeUnits = "yr BP",
+  time.variable = "time",
+  time.units = NULL,
   uncVar = NA,
   uncUnits = c("native", "sd"),
   weights = NA,
@@ -22,6 +22,8 @@ compositeEnsembles(
   scope = "climate",
   binFun = sampleEnsembleThenBinTs,
   verbose = TRUE,
+  ageVar = NULL,
+  timeUnits = NULL,
   ...
 )
 }
@@ -34,9 +36,9 @@ compositeEnsembles(
 
 \item{stanFun}{function to use for standardization (either standardizeOverRandomInterval, standardizeMeanIteratively, or standardizeOverInterval)}
 
-\item{ageVar}{the time variable to composite on. The default, "time", uses each record's time axis converted to `timeUnits` with [lipdR::getTsTime()], so records in year CE, yr BP or ka can be composited together, and an age ensemble (`ageEnsemble`) is used when a record has one. Any other name (e.g. "age" or "ageEnsemble") is used as it is, without conversion, as before compositeR 0.5.0.}
+\item{time.variable}{the time variable to composite on. The default, "time", is each record's primary time axis (see [lipdR::extractTs()]); any other time variable of the records (e.g. "age", "year", or a column such as "calAge"; see [lipdR::tsTimeVariables()]) can be used instead. Each record's variable is converted to `time.units` with [lipdR::getTsTime()], so records in year CE, yr BP or ka can be composited together. An age or year ensemble is used when a record has one, except with `binFun = simpleBinTs`.}
 
-\item{timeUnits}{the time scale to composite on when `ageVar = "time"` (default "yr BP"). `binvec` is in these units. Also used to label the output.}
+\item{time.units}{the time scale to composite on, e.g. "yr BP", "ka" or "CE". `binvec` and the standardization interval (`interval`, `searchRange`) are read on this scale, and the output is on it. NULL (default) uses the records' own scale if they all share one, and "yr BP" otherwise (see [lipdR::commonTimeUnits()]).}
 
 \item{uncVar}{uncertainty variable  \cr - Use a string to identify a fTS variable name or use a number to provide a uniform value to all records.  \cr - This is used if binFun == sampleEnsembleThenBinTs but not for simpleBinTs.}
 
@@ -59,6 +61,8 @@ compositeEnsembles(
 \item{binFun}{function to use for binning (either sampleEnsembleThenBinTs or simpleBinTS)}
 
 \item{verbose}{should a progress bar be printed?}
+
+\item{ageVar, timeUnits}{deprecated names for `time.variable` and `time.units`.}
 
 \item{...}{additional options to pass to stanFun}
 }

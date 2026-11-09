@@ -6,23 +6,26 @@
 \usage{
 plotComposite(
   compositeList,
-  ageUnits = NULL,
+  time.units = NULL,
   valUnits = "standardized",
   title = "composite proxy record",
   combine = TRUE,
+  ageUnits = NULL,
   ...
 )
 }
 \arguments{
 \item{compositeList}{The output of compositeEnsembles()}
 
-\item{ageUnits}{units of the time axis. NULL (default) uses the units the composite was made in (`compositeList$timeUnits`), or "yr BP" for older composites. Year CE axes run forward; other axes are reversed.}
+\item{time.units}{the time scale to plot on, e.g. "yr BP", "ka" or "CE". NULL (default) uses the scale the composite was made on (`compositeList$timeUnits`, or "yr BP" for composites made before compositeR 0.5.0); another scale converts the axis. Axes that count forward (year CE) run left to right; axes that count back are reversed.}
 
 \item{valUnits}{units for the composite (default = standardized)}
 
 \item{title}{a title for the combined plot (not used if combine == FALSE)}
 
 \item{combine}{output a combined figure using egg::ggarrange or provide a list of subplots}
+
+\item{ageUnits}{deprecated name for `time.units`}
 
 \item{...}{
   Arguments passed on to \code{\link[lipdViz:plotTimeseriesEnsRibbons]{lipdViz::plotTimeseriesEnsRibbons}}

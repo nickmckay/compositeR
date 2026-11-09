@@ -7,7 +7,8 @@
 sampleEnsembleThenBinTs(
   ts,
   binvec,
-  ageVar = "age",
+  time.variable = "age",
+  time.units = "yr BP",
   uncVar = "paleoData_uncertainty1sd",
   defaultUnc = 1.5,
   uncUnits = c("native", "sd"),
@@ -19,7 +20,8 @@ sampleEnsembleThenBinTs(
   spreadMax = as.numeric(stats::quantile(abs(diff(thisAge)), probs = 0.75, na.rm = TRUE)),
   gaussianizeInput = FALSE,
   alignInterpDirection = TRUE,
-  scope = "climate"
+  scope = "climate",
+  ageVar = NULL
 )
 }
 \arguments{
@@ -27,7 +29,9 @@ sampleEnsembleThenBinTs(
 
 \item{binvec}{vector of time boundaries over which to bin}
 
-\item{ageVar}{specify the name the time variable (typically 'age' or 'year')}
+\item{time.variable}{the name of the time field of `ts` to bin on (e.g. "age" or "year"), used as it is}
+
+\item{time.units}{the time scale of that field (default "yr BP")}
 
 \item{uncVar}{specify the name the uncertainty variable}
 
@@ -52,6 +56,8 @@ sampleEnsembleThenBinTs(
 \item{alignInterpDirection}{multiply values by -1 if the interpretation direction is negative (TRUE/FALSE). See [interpDirectionSign()].}
 
 \item{scope}{the interpretation scope to align with (typically "climate" (default) or "isotope"). See [interpDirectionSign()].}
+
+\item{ageVar}{deprecated name for `time.variable`}
 }
 \value{
 numeric vector of values of equal length to binvec

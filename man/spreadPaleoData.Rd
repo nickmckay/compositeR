@@ -11,8 +11,9 @@ spreadPaleoData(
   spreadBy = NA,
   spreadMax = NA,
   spreadMaxPct = NA,
-  minAge = -75,
-  maxAge = NA
+  minAge = NA,
+  maxAge = NA,
+  time.units = "yr BP"
 )
 }
 \arguments{
@@ -28,9 +29,11 @@ spreadPaleoData(
 
 \item{spreadMaxPct}{a limit to how many years a value can be interpolated across (given in the quantile ranking of age gaps (0.5=the median age gap). A floor of 1 year is imposed). If NA, no limit is imposed. Superseded by maxGap}
 
-\item{minAge}{minimum age value for output age vector. Default is -75 cal yr BP (2025 CE)}
+\item{minAge}{minimum value for the output time vector. NA (default) means no limit, except that times after 2025 CE are dropped (on a yr BP scale that is -75)}
 
 \item{maxAge}{maximum age value for output age vector. If NA, this will be the max(age) plus half the gap between the two oldest ages}
+
+\item{time.units}{the time scale of `age` (default "yr BP"), used to find 2025 CE}
 }
 \value{
 list of length=2 (spreadAge and spreadVal numeric vectors)
