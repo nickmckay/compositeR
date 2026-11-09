@@ -10,10 +10,10 @@ scaleComposite <- function(composite,binvec,scaleYears,scaleData,scaleWindow = N
   }
 
   if(NCOL(scaleData) > 1){#ensemble! :)
-    d <- ens::bin(scaleYears,values = scaleData[,sample.int(ncol(scaleData),size = 1)],bin.vec = binvec)
+    d <- binOnAxis(scaleYears,scaleData[,sample.int(ncol(scaleData),size = 1)],binvec,time.units)
 
   }else{ #nonsemble :(
-    d <- ens::bin(scaleYears,values = scaleData,bin.vec = binvec)
+    d <- binOnAxis(scaleYears,scaleData,binvec,time.units)
 
   }
 

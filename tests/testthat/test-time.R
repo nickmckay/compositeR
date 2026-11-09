@@ -90,11 +90,53 @@ test_that("compositing on CE and on ka gives the same composite", {
   expect_true(any(is.finite(as.matrix(ce$composite))))
   expect_equal(flip(ka$composite), as.matrix(ce$composite), ignore_attr = TRUE)
 
-  # with spreading, nearest-neighbour ties break the other way on a reversed
-  # axis, so the composites are close rather than identical
+  # spreading is done on one orientation internally, so it gives the same
+  # composite on every axis too
   ceS <- run("CE", bvCE, c(1100, 1900), TRUE)
   kaS <- run("ka", bvKa, (1950 - c(1100, 1900)) / 1000, TRUE)
-  expect_gt(stats::cor(as.vector(flip(kaS$composite)), as.vector(as.matrix(ceS$composite)), use = "complete.obs"), 0.95)
+  bpS <- run("yr BP", 1950 - rev(bvCE), 1950 - c(1900, 1100), TRUE)
+  expect_true(any(is.finite(as.matrix(ceS$composite))))
+  expect_equal(flip(kaS$composite), as.matrix(ceS$composite), ignore_attr = TRUE)
+  expect_equal(flip(bpS$composite), as.matrix(ceS$composite), ignore_attr = TRUE)
+  expect_equal(as.matrix(kaS$composite), as.matrix(bpS$composite), ignore_attr = TRUE)
+})
+
+test_that("spreadPaleoData gives the same result on yr BP, ka and CE axes", {
+  set.seed(5)
+  # uneven sampling, with grid points exactly halfway between samples (ties)
+  bp <- c(12, 30, 48, 100, 140, 141, 300, 420, 610, 800)
+  v <- rnorm(length(bp))
+  sBP <- spreadPaleoData(bp, v, spreadBy = 1, spreadMax = 100)
+  sKa <- spreadPaleoData(bp / 1000, v, spreadBy = 0.001, spreadMax = 0.1, time.units = "ka")
+  sCE <- spreadPaleoData(1950 - bp, v, spreadBy = 1, spreadMax = 100, time.units = "CE")
+  expect_equal(sKa$spreadAge * 1000, sBP$spreadAge)
+  expect_equal(sKa$spreadVal, sBP$spreadVal)
+  expect_equal(rev(1950 - sCE$spreadAge), sBP$spreadAge)
+  expect_equal(rev(sCE$spreadVal), sBP$spreadVal)
+  # output is in increasing order on its own axis
+  expect_false(is.unsorted(stats::na.omit(sCE$spreadAge)))
+  # the same with the default spreadBy and an explicit newAge
+  expect_equal(rev(spreadPaleoData(1950 - bp, v, time.units = "CE")$spreadVal),
+               spreadPaleoData(bp, v)$spreadVal)
+  na <- seq(0, 800, by = 5)
+  expect_equal(rev(spreadPaleoData(1950 - bp, v, newAge = 1950 - na, time.units = "CE")$spreadVal),
+               spreadPaleoData(bp, v, newAge = na)$spreadVal)
+})
+
+test_that("spreadPaleoData honors maxAge and minAge on any axis", {
+  bp <- seq(100, 1000, by = 100)
+  v <- seq_along(bp)
+  sBP <- spreadPaleoData(bp, v, spreadBy = 10, minAge = 200, maxAge = 500)
+  expect_equal(range(sBP$spreadAge, na.rm = TRUE), c(200, 500))
+  expect_equal(range(sBP$spreadVal, na.rm = TRUE), c(2, 5))
+  sKa <- spreadPaleoData(bp / 1000, v, spreadBy = 0.01, minAge = 0.2, maxAge = 0.5, time.units = "ka")
+  expect_equal(range(sKa$spreadAge, na.rm = TRUE), c(0.2, 0.5))
+  # on a CE axis maxAge is the earliest year kept and minAge the latest
+  sCE <- spreadPaleoData(1950 - bp, v, spreadBy = 10, minAge = 1750, maxAge = 1450, time.units = "CE")
+  expect_equal(range(sCE$spreadAge, na.rm = TRUE), c(1450, 1750))
+  expect_equal(rev(sCE$spreadVal), sBP$spreadVal)
+  # a maxAge older than the record doesn't extend it
+  expect_equal(spreadPaleoData(bp, v, spreadBy = 10, maxAge = 5000), spreadPaleoData(bp, v, spreadBy = 10))
 })
 
 test_that("time.variable picks a time column other than the primary one", {
@@ -165,4 +207,15 @@ test_that("plotComposite converts to another scale", {
   p <- plotComposite(out, time.units = "CE", combine = FALSE)
   expect_equal(range(ggplot2::layer_data(p$dataUsed)$x), range(1950 - out$ages))
   expect_warning(plotComposite(out, ageUnits = "CE", combine = FALSE), "deprecated")
+})
+
+test_that("scaleComposite bins the scaling data the same way on CE and yr BP axes", {
+  set.seed(8)
+  yrs <- 1001:2000
+  sd1 <- rnorm(length(yrs))
+  bvCE <- seq(1000, 2000, by = 50)
+  comp <- matrix(rnorm(20), ncol = 1)
+  ce <- scaleComposite(comp, bvCE, yrs, sd1, time.units = "CE")
+  bp <- scaleComposite(comp[20:1, ], rev(1950 - bvCE), 1950 - yrs, sd1, time.units = "yr BP")
+  expect_equal(as.vector(ce), as.vector(bp)[20:1])
 })
