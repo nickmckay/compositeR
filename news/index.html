@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">compositeR</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.6.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.6.1</span>
       </span>
     </div>
 
@@ -57,6 +57,17 @@
 
     </div>
 
+    <div class="section level2">
+<h2 class="page-header" data-toc-text="0.6.1" id="compositer-061">compositeR 0.6.1<a class="anchor" aria-label="anchor" href="#compositer-061"></a></h2>
+<ul><li>Compositing with spreading (<code>spread = TRUE</code>, the default) now gives the same composite whatever the time scale: the same records composited on yr BP, ka or year CE agree after converting the axes. Before, results on a year CE axis were close to, but not the same as, those on yr BP or ka. Results on a yr BP axis are unchanged.
+<ul><li>
+<code><a href="../reference/spreadPaleoData.html">spreadPaleoData()</a></code> now always spreads on a yr BP axis, converting other scales to yr BP and back, so ties between two equally near values break the same way on every scale. <code>spreadAge</code> is still returned in <code>time.units</code>, in increasing order.</li>
+<li>
+<code><a href="../reference/simpleBinTs.html">simpleBinTs()</a></code> (and so <code><a href="../reference/sampleEnsembleThenBinTs.html">sampleEnsembleThenBinTs()</a></code> and <code><a href="../reference/compositeEnsembles.html">compositeEnsembles()</a></code>) puts a value that falls exactly on a bin edge in the younger bin on every scale. On a year CE axis it used to go in the older bin. <code>scaleComposite()</code> does the same when it knows the composite’s <code>time.units</code>.</li>
+</ul></li>
+<li>
+<code><a href="../reference/spreadPaleoData.html">spreadPaleoData()</a></code> now honors <code>maxAge</code>, which it used to ignore. <code>minAge</code> and <code>maxAge</code> are the youngest and oldest times kept, in <code>time.units</code>: on a year CE axis <code>maxAge</code> is the earliest year kept and <code>minAge</code> the latest. (In 0.6.0, <code>minAge</code> on a year CE axis was the earliest year kept.) The output still never extends past the oldest end of the record.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="0.6.0" id="compositer-060">compositeR 0.6.0<a class="anchor" aria-label="anchor" href="#compositer-060"></a></h2>
 <p>Composites can be made on any time scale and any time variable, using the time scales lipdR 0.8 stores on every time column. Requires lipdR &gt;= 0.8.1.</p>
