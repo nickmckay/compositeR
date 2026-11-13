@@ -1,3 +1,7 @@
+# compositeR 0.6.2
+
+* Requires lipdR 0.8.4 or later, which includes the `pullTsVariable()` fix from 0.8.3 and `filterByInterpretation()`.
+
 # compositeR 0.6.1
 
 * Compositing with spreading (`spread = TRUE`, the default) now gives the same composite whatever the time scale: the same records composited on yr BP, ka or year CE agree after converting the axes. Before, results on a year CE axis were close to, but not the same as, those on yr BP or ka. Results on a yr BP axis are unchanged.
